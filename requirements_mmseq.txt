@@ -1,0 +1,38 @@
+# This file may be used to create an environment using:
+# $ conda create --name <env> --file <this file>
+# platform: linux-64
+_libgcc_mutex=0.1=conda_forge
+_openmp_mutex=4.5=2_gnu
+aria2=1.37.0=h347180d_1
+bzip2=1.0.8=hd590300_5
+c-ares=1.28.1=hd590300_0
+ca-certificates=2024.6.2=hbcca054_0
+gawk=5.3.0=ha916aea_0
+gettext=0.22.5=h59595ed_2
+gettext-tools=0.22.5=h59595ed_2
+gmp=6.3.0=hac33072_2
+icu=73.2=h59595ed_0
+libasprintf=0.22.5=h661eb56_2
+libasprintf-devel=0.22.5=h661eb56_2
+libgcc-ng=13.2.0=h77fa898_11
+libgettextpo=0.22.5=h59595ed_2
+libgettextpo-devel=0.22.5=h59595ed_2
+libgomp=13.2.0=h77fa898_11
+libiconv=1.17=hd590300_2
+libidn2=2.3.7=hd590300_0
+libsqlite=3.46.0=hde9e2c9_0
+libssh2=1.11.0=h0841786_0
+libstdcxx-ng=13.2.0=hc0a3c3a_11
+libunistring=0.9.10=h7f98852_0
+libxcrypt=4.4.36=hd590300_1
+libxml2=2.12.7=hc051c1a_1
+libzlib=1.2.13=h4ab18f5_6
+mmseqs2=15.6f452=pl5321h6a68c12_2
+mpfr=4.2.1=h9458935_1
+ncurses=6.5=h59595ed_0
+openssl=3.3.1=h4ab18f5_0
+perl=5.32.1=7_hd590300_perl5
+readline=8.2=h8228510_1
+wget=1.21.4=hda4d442_0
+xz=5.2.6=h166bdaf_0
+zlib=1.2.13=h4ab18f5_6
