@@ -1,9 +1,11 @@
 import csv
 from Bio import SeqIO
-import sys
 
 def extract_fasta_records(tsv_file, fasta_file, output_fasta_file):
-    # Read the list of IDs from the TSV file (6th column)
+    """
+    Read the list of IDs from the TSV file (6th column)
+    """
+
     ids = set()
     with open(tsv_file, 'r') as tsv_handle:
         reader = csv.reader(tsv_handle, delimiter='\t')
@@ -21,9 +23,6 @@ def extract_fasta_records(tsv_file, fasta_file, output_fasta_file):
 
     print(f"Extracted {len(matching_records)} records to {output_fasta_file}")
 
-# Example usage
-tsv_file = sys.argv[1]  # Path to your TSV file
-fasta_file = sys.argv[2]  # Path to your FASTA file
-output_fasta_file = tsv_file.rpartition('.')[0]+"_by_bakta_tag.faa"  # Path to the output FASTA file
-
-extract_fasta_records(tsv_file, fasta_file, output_fasta_file)
+def catch_ids(tsv_file, fasta_file):
+    output_fasta_file = tsv_file.rpartition('.')[0]+"_by_bakta_tag.faa"
+    extract_fasta_records(tsv_file, fasta_file, output_fasta_file)
