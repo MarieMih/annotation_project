@@ -1,11 +1,13 @@
-import requests
-import sys
 """
 For downloading proteins from Uniprot, but actually
 from elsewhere.
 First argument of cmd is a name to record, 
 second argument is a formed api query from Uniprot.
 """
+
+import sys
+import requests
+
 
 def download_uniprot_data(api_url, output_file):
     try:
@@ -19,8 +21,8 @@ def download_uniprot_data(api_url, output_file):
     except Exception as err:
         print(f'Other error occurred: {err}')
 
+
 if __name__ == "__main__":
     output_file = sys.argv[1]
     api_url = sys.argv[2]
     download_uniprot_data(api_url, output_file)
-

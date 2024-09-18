@@ -1,10 +1,10 @@
-import pandas as pd
-import matplotlib.pyplot as plt
 import os
 import sys
 import itertools
-import telegram_send
 import asyncio
+import telegram_send
+import pandas as pd
+import matplotlib.pyplot as plt
 
 
 def create_presence_absence_matrix(directory):
@@ -34,25 +34,25 @@ def create_presence_absence_matrix(directory):
 
 def calculate_core_genome_combinations(df):
     core_genome_sizes = {i: [] for i in range(1, len(df.columns) + 1)}
-    
+
     for i in range(1, len(df.columns) + 1):
         for combo in itertools.combinations(df.columns, i):
             subset = df[list(combo)]
             core_genes = subset.sum(axis=1) == i
             core_genome_sizes[i].append(core_genes.sum())
-    
+
     return core_genome_sizes
 
 
 def calculate_pangenome_combinations(df):
     pangenome_sizes = {i: [] for i in range(1, len(df.columns) + 1)}
-    
+
     for i in range(1, len(df.columns) + 1):
         for combo in itertools.combinations(df.columns, i):
             subset = df[list(combo)]
             pangenome_genes = subset.sum(axis=1) > 0
             pangenome_sizes[i].append(pangenome_genes.sum())
-    
+
     return pangenome_sizes
 
 

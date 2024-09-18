@@ -1,6 +1,6 @@
 import csv
-import json
 import ast
+
 
 def converting_uniref_to_uniprotkb(input_file):
     """
@@ -17,17 +17,17 @@ def converting_uniref_to_uniprotkb(input_file):
     with open(input_file, 'r', newline='') as infile:
         reader = csv.reader(infile, delimiter='\t')
         for row in reader:
-            if len(row) >= 2:  # Проверка, что строка содержит как минимум 2 колонки
+            if len(row) >= 2:
                 first_column = row[0]
                 json_str = row[1]
-                
+
                 try:
                     json_data = ast.literal_eval(json_str)
-                    
+
                     if 'accessions' in json_data['representativeMember']:
-                        memberId_value = json_data['representativeMember']['accessions'][0]
-                        extracted_data.append([first_column, memberId_value])
-                        uniref100_list.append(memberId_value)
+                        member_id_value = json_data['representativeMember']['accessions'][0]
+                        extracted_data.append([first_column, member_id_value])
+                        uniref100_list.append(member_id_value)
 
                 except (SyntaxError, ValueError) as e:
                     print(f"Предупреждение при парсинге JSON в строке: {row}, error: {e}")
