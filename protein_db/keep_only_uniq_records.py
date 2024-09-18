@@ -2,18 +2,15 @@ import sys
 from Bio import SeqIO
 
 
-def filter_unique_fasta(input_file, output_file):
-    unique_records = {}
-    unique_headers = []
+def filter_unique_fasta(in_file, out_file):
+    unique_headers = set()
 
-    for record in SeqIO.parse(input_file, "fasta"):
-        header_key = " ".join(record.description.split(" ")[1:])
-        if header_key not in unique_headers:
-            unique_records[record.id] = record
-            unique_headers.append(header_key)
-
-    with open(output_file, "w") as output_handle:
-        SeqIO.write(unique_records.values(), output_handle, "fasta")
+    with open(out_file, "w") as output_handle:
+        for record in SeqIO.parse(in_file, "fasta"):
+            header_key = " ".join(record.description.split(" ")[1:])
+            if header_key not in unique_headers:
+                unique_headers.add(header_key)
+                SeqIO.write(record, output_handle, "fasta")
 
 
 input_file = sys.argv[1]
