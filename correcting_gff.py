@@ -5,12 +5,14 @@ import re
 import csv
 
 def correcting_gff(input_path):
+    """
+    creating gff and tsv with modified information
+    """
+
     for file in os.listdir(input_path):
         if file.endswith(".gff3"):
-            bakta_gff = input_path + "/" + file
-            bakta_tsv = input_path + "/" + file.rpartition('.')[0] + ".tsv"
-            bakta_gff = os.path.abspath(bakta_gff)
-            bakta_tsv = os.path.abspath(bakta_tsv)
+            bakta_gff = os.path.abspath(input_path + "/" + file)
+            bakta_tsv = os.path.abspath(input_path + "/" + file.rpartition('.')[0] + ".tsv")
 
     if os.path.exists(bakta_gff):
         print(f'The file {bakta_gff} exists')
@@ -28,7 +30,7 @@ def correcting_gff(input_path):
 
     for file in os.listdir(pth):
         if file.endswith("ref2ref"):
-            uni = os.path.abspath(pth) + "/" + file
+            uni = os.path.abspath(pth) + "/" + file  # find directory with output of upimapi
     for file in os.listdir(pth):
         if file.endswith("_uniref100_columns.tsv"):
             info_uniref100_table_tsv = os.path.abspath(pth) + "/" + file
@@ -38,27 +40,21 @@ def correcting_gff(input_path):
     info_unknown_table_tsv = uni + "/uniprotkb/annotation/UPIMAPI_results.tsv"
 
     unknown_df = pd.read_csv(info_unknown_table_tsv, sep = "\t", usecols=range(2), header = 0)
-
     unknown_info = pd.read_csv(info_unknown_tsv, sep = "\t", header =0, index_col = 0)
 
     pd.set_option('display.max_columns', None)
-
     pd.set_option('display.max_rows', 30)
 
     joined_unknown = unknown_df.join(unknown_info, on = "sseqid")
-
     ext_tsv_df = pd.read_csv(bakta_tsv_ext, sep = "\t", header = None, comment = '#', \
                             names = ['Sequence Id','Type','Start','Stop','Strand','Locus Tag','Gene','Product','DbXrefs'])
-
     joined_unknown['Gene Names'] = joined_unknown['Gene Names'].str.split().str[0]
-
     merged_df = ext_tsv_df.merge(joined_unknown, left_on="Locus Tag", right_on='qseqid', suffixes=('', '_new'), how = "left")
-
     joined_unknown.fillna('', inplace=True)
 
     for i in range(len(merged_df)): 
+
         locus_tag = merged_df.at[i, 'Locus Tag']
-            
         matching_row = joined_unknown[joined_unknown['qseqid'] == locus_tag]
         
         if not matching_row.empty and matching_row['Gene Names'].values[0] != '':
@@ -81,22 +77,18 @@ def correcting_gff(input_path):
     joined_uni.columns = ['id', 'uniprot']
 
     uniref_df_3 = pd.read_csv(info_uniref100_tsv, sep = "\t", header = 0)
-
     joined_uni = joined_uni.merge(uniref_df_3, left_on = "uniprot", right_on = "Entry", how='left', suffixes=('', '_new'))
-
     joined_uni['Gene Names'] = joined_uni['Gene Names'].str.split().str[0]
-
     ext_tsv_df = pd.read_csv(bakta_tsv_ext, sep = "\t", header = 0)
-
     merged_df = ext_tsv_df.merge(joined_uni, left_on="Locus Tag", right_on='id', suffixes=('', '_new'), how = "left")
-
     joined_uni.fillna('', inplace=True)
 
     for i in range(len(merged_df)):    
+
         locus_tag = merged_df.at[i, 'Locus Tag']
-            
         uniprotkb = merged_df.at[i, 'DbXrefs']
         entry = re.compile(r"UserProtein:[^|]*\|([^,\n]*)")
+
         if isinstance(uniprotkb, str):
             match = re.search(entry, uniprotkb)
             if match:
@@ -117,13 +109,12 @@ def correcting_gff(input_path):
     ext_tsv_df["Product"] = merged_df["Product"] 
     ext_tsv_df["Organism"] = merged_df["Organism"] 
     ext_tsv_df["Entry UniProtKB"] = merged_df["Entry UniProtKB"] 
-
     ext_tsv_df.to_csv(bakta_tsv_ext, sep = '\t', index=False)
-
     ext_tsv_df.fillna('', inplace=True)
 
     with open(bakta_gff_ext, 'w') as w:
         with open(bakta_gff, 'r') as f:
+            
             reader = csv.reader(f, delimiter='\t')
             for row in reader:
                 if row[0].startswith('#'):

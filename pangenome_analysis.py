@@ -1,24 +1,23 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-import os, sys
+import os
+import sys
 import itertools
 import telegram_send
 import asyncio
+
 
 def create_presence_absence_matrix(directory):
     gene_dict = {}
 
     for filename in os.listdir(directory):
-        if filename.endswith('.tsv') and filename.startswith('V'):
+        if filename.endswith('extended.tsv'):
             file_path = os.path.join(directory, filename)
             df = pd.read_csv(file_path, sep='\t', header=None)
-
             gene_ids = df[10].unique()
-
             gene_dict[filename] = set(gene_ids)
 
     all_genes = list(set.union(*gene_dict.values()))
-
     presence_absence_matrix = pd.DataFrame(0, index=all_genes, columns=gene_dict.keys())
 
     for filename, genes in gene_dict.items():
@@ -28,10 +27,10 @@ def create_presence_absence_matrix(directory):
     presence_absence_matrix['count'] = presence_absence_matrix.sum(axis=1)
     presence_absence_matrix = presence_absence_matrix.sort_values(by='count', ascending=False)
     presence_absence_matrix = presence_absence_matrix.drop(columns=['count'])
-
     presence_absence_matrix.to_csv(directory + "/" + 'presence_absence_matrix.csv')
 
     return directory + "/" + 'presence_absence_matrix.csv'
+
 
 def calculate_core_genome_combinations(df):
     core_genome_sizes = {i: [] for i in range(1, len(df.columns) + 1)}
@@ -44,6 +43,7 @@ def calculate_core_genome_combinations(df):
     
     return core_genome_sizes
 
+
 def calculate_pangenome_combinations(df):
     pangenome_sizes = {i: [] for i in range(1, len(df.columns) + 1)}
     
@@ -55,6 +55,7 @@ def calculate_pangenome_combinations(df):
     
     return pangenome_sizes
 
+
 async def send_smth(cor_image, pan_image):
     with open(cor_image, "rb") as f:
         await telegram_send.send(images=[f])
@@ -65,7 +66,7 @@ if __name__ == "__main__":
 
     directory = sys.argv[1]
     file_path = create_presence_absence_matrix(directory)
-    data = pd.read_csv(file_path, sep = ',', index_col = 0)
+    data = pd.read_csv(file_path, sep=',', index_col=0)
     data.columns = [i.replace("_extended", "") for i in data.columns]
 
     core_genome_sizes = calculate_core_genome_combinations(data)
