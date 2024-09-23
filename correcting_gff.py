@@ -86,6 +86,8 @@ def correcting_gff(input_path):
     ext_tsv_df["Organism"] = merged_df["Organism"]
     ext_tsv_df.to_csv(bakta_tsv_ext, sep='\t', index=False)
 
+    ### known proteins
+
     uniref_df_1 = pd.read_csv(info_uniref100_table_tsv, sep="\t", header=None)
     uniref_df_2 = pd.read_csv(info_uniref100_table_ids, sep="\t", header=None)
     uniref_df_2 = uniref_df_2.drop_duplicates(subset=0, keep='first')
@@ -107,13 +109,6 @@ def correcting_gff(input_path):
         uniprotkb = merged_df.at[i, 'DbXrefs']
         entry = re.compile(r"UserProtein:[^|]*\|([^,\n]*)")
 
-        if isinstance(uniprotkb, str):
-            match = re.search(entry, uniprotkb)
-            if match:
-                uniprotkb = match.group(1)
-                merged_df.at[i, 'Entry UniProtKB'] = uniprotkb
-                merged_df.at[i, 'Organism'] = "Escherichia coli"
-
         matching_row = joined_uni[joined_uni['id'] == locus_tag]
 
         if not matching_row.empty and matching_row['Gene Names'].values[0] != '':
@@ -123,12 +118,21 @@ def correcting_gff(input_path):
             merged_df.at[i, 'Organism'] = matching_row['Organism'].values[0]
             merged_df.at[i, 'Entry UniProtKB'] = matching_row['Entry'].values[0]
 
+        if isinstance(uniprotkb, str):
+            match = re.search(entry, uniprotkb)
+            if match:
+                uniprotkb = match.group(1)
+                merged_df.at[i, 'Entry UniProtKB'] = uniprotkb
+                merged_df.at[i, 'Organism'] = "Escherichia coli"
+
     ext_tsv_df["Gene"] = merged_df["Gene"]
     ext_tsv_df["Product"] = merged_df["Product"]
     ext_tsv_df["Organism"] = merged_df["Organism"]
     ext_tsv_df["Entry UniProtKB"] = merged_df["Entry UniProtKB"]
     ext_tsv_df.to_csv(bakta_tsv_ext, sep = '\t', index=False)
     ext_tsv_df.fillna('', inplace=True)
+
+    ### creating new gff
 
     with open(bakta_gff_ext, 'w') as w:
         with open(bakta_gff, 'r') as f:
