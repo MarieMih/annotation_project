@@ -3,11 +3,11 @@
 import os
 import sys
 import subprocess
-import asyncio
 from telegram_send import send
 
 BAKTA_DB = "/storage/data1/marmi/bakta_db/db"
-PROTEINS = ""
+# PROTEINS = "/storage/data1/marmi/annotation_project_dev/annotation_project/protein_db/uniprot_faa/custom_db_562_and_phage.fasta"
+PROTEINS = "/storage/data1/marmi/annotation_project_dev/annotation_project/protein_db/uniprot_faa/uniq_sp562_rep_seq.fasta"
 
 
 async def send_smth(text=None, image=None, file=None):
@@ -179,7 +179,9 @@ def bakta_annotation(fasta, locus_tag):
     try:
         subprocess.run(['bakta',
                         '--db', BAKTA_DB,
-                        # '--proteins', PROTEINS,
+                        '--proteins', PROTEINS,
+                        '--force',
+                        '--skip-plot',
                         '--locus-tag', locus_tag,
                         '--prefix', locus_tag,
                         '--threads', '8',
@@ -189,23 +191,5 @@ def bakta_annotation(fasta, locus_tag):
     except Exception as e:
         print(e, "\n", "Error with bakta.")
         f.close()
-        sys.exit()
+        # sys.exit()
     f.close()
-
-
-if __name__ == "__main__":
-    directory = sys.argv[1]
-    files = []
-    for filename in os.listdir(directory):
-        if filename.endswith('_1.fq.gz'):
-            file_path = os.path.join(directory, filename)
-            files.append(file_path)
-
-    for i in files:
-        name = os.path.split(i)[1].partition('.')[0]
-        print(i, name)
-        read_1, read_2 = filtering_fastq_pe(i)
-        assembly = assembly_unicycler_pe(read_1, read_2)
-        # bakta_annotation(assembly, name)
-
-    asyncio.run(send_smth(text=["Ends filtering"]))

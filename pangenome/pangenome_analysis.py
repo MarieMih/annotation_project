@@ -1,10 +1,17 @@
 import os
-import sys
 import itertools
 import asyncio
 import telegram_send
 import pandas as pd
 import matplotlib.pyplot as plt
+
+
+def create_directory_with_soft_links(tsvs, target):
+    if not os.path.exists(target):
+        os.makedirs(target)
+    for i in tsvs:
+        new_link = os.path.split(i)[1]
+        os.symlink(i, target + '/' + new_link)
 
 
 def create_presence_absence_matrix(directory):
@@ -62,9 +69,8 @@ async def send_smth(cor_image, pan_image):
     with open(pan_image, "rb") as f:
         await telegram_send.send(images=[f])
 
-if __name__ == "__main__":
 
-    directory = sys.argv[1]
+def pangenome_analysis(directory):
     file_path = create_presence_absence_matrix(directory)
     data = pd.read_csv(file_path, sep=',', index_col=0)
     data.columns = [i.replace("_extended", "") for i in data.columns]

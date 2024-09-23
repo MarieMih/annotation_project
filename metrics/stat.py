@@ -61,5 +61,5 @@ def process_tsv(input_file):
         print()
 
 
-input_file = sys.argv[1]
-process_tsv(input_file)
+# input_file = sys.argv[1]
+# process_tsv(input_file)
