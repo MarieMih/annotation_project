@@ -129,7 +129,7 @@ def correcting_gff(input_path):
     ext_tsv_df["Product"] = merged_df["Product"]
     ext_tsv_df["Organism"] = merged_df["Organism"]
     ext_tsv_df["Entry UniProtKB"] = merged_df["Entry UniProtKB"]
-    ext_tsv_df.to_csv(bakta_tsv_ext, sep = '\t', index=False)
+    ext_tsv_df.to_csv(bakta_tsv_ext, sep='\t', index=False)
     ext_tsv_df.fillna('', inplace=True)
 
     ### creating new gff

@@ -5,9 +5,9 @@ import sys
 import subprocess
 from telegram_send import send
 
-BAKTA_DB = "/storage/data1/marmi/bakta_db/db"
+BAKTA_DB = "/storage/data1/marmi/bakta_db_latest/db"
 # PROTEINS = "/storage/data1/marmi/annotation_project_dev/annotation_project/protein_db/uniprot_faa/custom_db_562_and_phage.fasta"
-PROTEINS = "/storage/data1/marmi/annotation_project_dev/annotation_project/protein_db/uniprot_faa/uniq_sp562_rep_seq.fasta"
+PROTEINS = os.path.split(os.path.realpath(sys.argv[0]))[0] + "/protein_db/uniprot_faa/uniq_sp562_rep_seq.fasta"
 
 
 async def send_smth(text=None, image=None, file=None):
@@ -73,7 +73,9 @@ def filtering_fastq_pe(fastq,
         subprocess.run(['fastp', '-e', str(avg_qual), '-w', "8",
                         '--length_required', str(length_required),
                         '--in1', fastq_1_in, '--in2', fastq_2_in,
-                        '--out1', fastq_1_out, '--out2', fastq_2_out
+                        '--out1', fastq_1_out, '--out2', fastq_2_out,
+                        '-j', pref + "_fastp.json",
+                        '-h', pref + "_fastp.html"
                         ], check=True, stderr=f)
     except Exception as e:
         print(e, "\n", "Error while running fastp")
@@ -123,7 +125,9 @@ def filtering_fastq_se(fastq,
     try:
         subprocess.run(['fastp', '-e', str(avg_qual), '-w', '8',
                         '--length_required', str(length_required),
-                        '--in', fastq_in, '--out', fastq_out
+                        '--in', fastq_in, '--out', fastq_out,
+                        '-j', pref + "_fastp.json",
+                        '-h', pref + "_fastp.html"
                         ], check=True, stderr=f)
     except Exception as e:
         print(e)

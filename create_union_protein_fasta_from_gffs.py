@@ -1,12 +1,12 @@
 """
 Get all unique uniprotkb ids from tsvs and catch protein sequences.
 """
-
+import os
 import subprocess
 import csv
 
 
-def get_from_upimapi(id_set):
+def get_from_upimapi(id_set, directory):
     """
     Find information in db.
     """
@@ -14,13 +14,14 @@ def get_from_upimapi(id_set):
         outfile.write(",".join(id_set))
     subprocess.run(["upimapi",
                     "-i", "tmp_ids.csv",
-                    "-o", "upimapi_output",
+                    "-o", directory + "/upimapi_output",
                     "--fasta",
                     "--from-db", "UniProtKB AC/ID"],
                    check=True)
+    os.remove("tmp_ids.csv")
 
 
-def create_fasta_file(tsvs):
+def create_fasta_file(tsvs, directory):
     """
     Catch ids from all files and create fasta with upimapi
     """
@@ -32,4 +33,4 @@ def create_fasta_file(tsvs):
             for row in reader:
                 ids.add(row[10])
     ids.remove("")
-    get_from_upimapi(ids)
+    get_from_upimapi(ids, directory)

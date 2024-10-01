@@ -1,0 +1,19 @@
+name: annotation_project
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - matplotlib
+  - pandas
+  - numpy
+  - fastqc
+  - multiqc
+  - mmseqs2
+  - fastp
+  - rasusa
+  - upimapi
+  - bakta==1.9.4
+  - pip
+  - pip:
+    - telegram-send
