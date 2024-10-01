@@ -6,11 +6,11 @@ import sys
 import subprocess
 import logging
 import os
-from divide_tsv import divide_tsv
-from extract_uniref import extract_uniref
-from ref2kb import converting_uniref_to_uniprotkb
-from catch_ids import catch_ids
-from correcting_gff import correcting_gff
+from .divide_tsv import divide_tsv
+from .extract_uniref import extract_uniref
+from .ref2kb import converting_uniref_to_uniprotkb
+from .catch_ids import catch_ids
+from .correcting_gff import correcting_gff
 
 
 def annotation(start_file):

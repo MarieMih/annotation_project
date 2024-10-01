@@ -7,7 +7,7 @@ from telegram_send import send
 
 BAKTA_DB = "/storage/data1/marmi/bakta_db_latest/db"
 # PROTEINS = "/storage/data1/marmi/annotation_project_dev/annotation_project/protein_db/uniprot_faa/custom_db_562_and_phage.fasta"
-PROTEINS = os.path.split(os.path.realpath(sys.argv[0]))[0] + "/protein_db/uniprot_faa/uniq_sp562_rep_seq.fasta"
+PROTEINS = os.path.split(os.path.split(os.path.realpath(sys.argv[0]))[0])[0] + "/protein_db/uniprot_faa/uniq_sp562_rep_seq.fasta"
 
 
 async def send_smth(text=None, image=None, file=None):
@@ -178,8 +178,8 @@ def bakta_annotation(fasta, locus_tag):
     Annotation of bacterial assembly.
     """
     parts = os.path.split(fasta)
-    pth = parts[0] + "/bakta_annotation"
-    f = open(parts[0] + "/bakta_annotation" + ".log", "w", encoding="utf-8")
+    pth = parts[0] + "/bakta_annotation_" + locus_tag
+    f = open(parts[0] + "/bakta_annotation_" + locus_tag + ".log", "w", encoding="utf-8")
     try:
         subprocess.run(['bakta',
                         '--db', BAKTA_DB,
