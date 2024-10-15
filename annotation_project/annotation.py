@@ -6,11 +6,12 @@ import sys
 import subprocess
 import logging
 import os
-from .divide_tsv import divide_tsv
-from .extract_uniref import extract_uniref
-from .ref2kb import converting_uniref_to_uniprotkb
-from .catch_ids import catch_ids
-from .correcting_gff import correcting_gff
+from divide_tsv import divide_tsv
+from extract_uniref import extract_uniref
+from ref2kb import converting_uniref_to_uniprotkb
+from catch_ids import catch_ids
+from correcting_gff import correcting_gff
+from converting_to_gtf import convert_gff_to_gtf
 
 
 def annotation(start_file):
@@ -79,7 +80,14 @@ def annotation(start_file):
                                  check=True)
 
     try:
-        correcting_gff(converting)
+        file_annotation_gff = correcting_gff(converting)
     except:
         log.error('correcting gff error!', exc_info=True)
         sys.exit('ERROR: correcting_gff failed!')
+
+
+    try:
+        convert_gff_to_gtf(file_annotation_gff)
+    except:
+        log.error('converting gff error!', exc_info=True)
+        sys.exit('ERROR: converting failed!')

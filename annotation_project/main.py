@@ -1,14 +1,13 @@
 import os
-import sys
 import asyncio
-from .preparation import bakta_annotation
-from .preparation import send_smth
-from .preparation import filtering_fastq_pe
-from .preparation import assembly_unicycler_pe
-from .annotation import annotation
-from .pangenome.pangenome_analysis import create_directory_with_soft_links
-from .pangenome.pangenome_analysis import pangenome_analysis
-from .create_union_protein_fasta_from_gffs import create_fasta_file
+from preparation import bakta_annotation
+from preparation import send_smth
+from preparation import filtering_fastq_pe
+from preparation import assembly_unicycler_pe
+from annotation import annotation
+from pangenome.pangenome_analysis import create_directory_with_soft_links
+from pangenome.pangenome_analysis import pangenome_analysis
+from create_union_protein_fasta_from_gffs import create_fasta_file
 
 
 def pipeline_since_fastq(directory):
@@ -107,3 +106,21 @@ def pipeline_assembly(directory):
     create_fasta_file(tsvs, directory)
 
     asyncio.run(send_smth(text=["Ends annotation"]))
+
+
+def polishing_annotation(directory):
+    """
+    Add polishing to bakta annotation.
+    """
+    files = []
+    for filename in os.listdir(directory):
+        if filename.endswith('.tsv') and not filename.endswith('.hypotheticals.tsv'):
+            file_path = os.path.join(directory, filename)
+            files.append(file_path)
+
+    for i in files:
+        name = os.path.split(i)[1].partition('.')[0]
+        print(i, name)
+        annotation(i)
+
+    asyncio.run(send_smth(text=["Ends polishing annotation"]))

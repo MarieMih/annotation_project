@@ -5,6 +5,9 @@ import re
 def extract_uniref(input_file):
     """
     Gets uniref100.tsv
+    Input: file .tsv from bakta with records containing UniRef100 
+    Output: _columns.tsv with columns - locus_tag of protein and UniRef100
+    Output: _uniref100_ids.csv - all UniRef100 separated by comma for sending to upimapi
     """
 
     pref = input_file.rpartition('.')[0]

@@ -3,6 +3,7 @@ import shutil
 import re
 import csv
 import pandas as pd
+from finding_missing_entries import finding_missing_entries
 
 
 def correcting_gff(input_path):
@@ -31,6 +32,8 @@ def correcting_gff(input_path):
     bakta_gff_ext = bakta_gff.rpartition('.')[0] + "_extended.gff3"
     bakta_tsv_ext = bakta_tsv.rpartition('.')[0] + "_extended.tsv"
 
+    faa = bakta_gff.rpartition('.')[0] + ".faa"
+
     shutil.copy(bakta_gff, bakta_gff_ext)
     shutil.copy(bakta_tsv, bakta_tsv_ext)
 
@@ -53,19 +56,20 @@ def correcting_gff(input_path):
     # in this file first column is a unique protein id from bakta and a second column is a representative member id entry of cluster (unknown part)
     info_unknown_table_tsv = uni + "/uniprotkb/annotation/UPIMAPI_results.tsv"
 
-    unknown_df = pd.read_csv(info_unknown_table_tsv, sep = "\t", usecols=range(2), header = 0)
-    unknown_info = pd.read_csv(info_unknown_tsv, sep = "\t", header =0, index_col = 0)
+    unknown_df = pd.read_csv(info_unknown_table_tsv, sep="\t", usecols=range(2), header=0)
+    unknown_info = pd.read_csv(info_unknown_tsv, sep="\t", header=0, index_col=0)
 
-    pd.set_option('display.max_columns', None)
-    pd.set_option('display.max_rows', 30)
+    # pd.set_option('display.max_columns', None)
+    # pd.set_option('display.max_rows', 30)
 
     ############################### meaningful part ###########################
+
+    ext_tsv_df = pd.read_csv(bakta_tsv_ext, sep="\t", header=None, comment='#',
+                             names=['Sequence Id', 'Type', 'Start', 'Stop', 'Strand', 'Locus Tag', 'Gene', 'Product', 'DbXrefs'])
 
     ### unknown proteins
 
     joined_unknown = unknown_df.join(unknown_info, on="sseqid")
-    ext_tsv_df = pd.read_csv(bakta_tsv_ext, sep="\t", header=None, comment='#',
-                             names=['Sequence Id', 'Type', 'Start', 'Stop', 'Strand', 'Locus Tag', 'Gene', 'Product', 'DbXrefs'])
     joined_unknown['Gene Names'] = joined_unknown['Gene Names'].str.split().str[0]  # could be a lot of gene names, taking only first
     merged_df = ext_tsv_df.merge(joined_unknown, left_on="Locus Tag", right_on='qseqid', suffixes=('', '_new'), how="left")
     joined_unknown.fillna('', inplace=True)
@@ -129,6 +133,9 @@ def correcting_gff(input_path):
     ext_tsv_df["Product"] = merged_df["Product"]
     ext_tsv_df["Organism"] = merged_df["Organism"]
     ext_tsv_df["Entry UniProtKB"] = merged_df["Entry UniProtKB"]
+
+    finding_missing_entries(ext_tsv_df, faa)
+
     ext_tsv_df.to_csv(bakta_tsv_ext, sep='\t', index=False)
     ext_tsv_df.fillna('', inplace=True)
 
@@ -136,15 +143,15 @@ def correcting_gff(input_path):
 
     with open(bakta_gff_ext, 'w') as w:
         with open(bakta_gff, 'r') as f:
-            
+
             reader = csv.reader(f, delimiter='\t')
             for row in reader:
                 if row[0].startswith('#'):
-                    w.write('\t'.join(row)+"\n")
+                    w.write('\t'.join(row) + "\n")
                     continue
-                if len(row)<2:
-                    w.write('\t'.join(row)+"\n")
-                    continue              
+                if len(row) < 2:
+                    w.write('\t'.join(row) + "\n")
+                    continue
                 pairs = row[8].split(';')
                 parsed_dict = {pair.split('=', 1)[0]: pair.split('=', 1)[1] for pair in pairs}
                 id = ext_tsv_df[ ext_tsv_df['Locus Tag'] == parsed_dict.get('locus_tag')]
@@ -177,8 +184,10 @@ def correcting_gff(input_path):
                     if record['Organism']:
                         organism = f"organism={record['Organism']}"
                         new_record.append(organism)
-                    
+
                     new_record = ";".join(new_record)
                     new_row = row.copy()
                     new_row[8] = new_record
                     w.write('\t'.join(new_row)+"\n")
+
+    return bakta_gff_ext
