@@ -42,7 +42,7 @@ def finding_missing_entries(df, faa):
         # information from UPIMAPI_results.tsv
         ltag = r["qseqid"]
         organism = r["Taxonomic lineage (SPECIES)"]
-        gene = r["Gene Names"].split(" ")[0]
+        gene = str(r["Gene Names"]).split(" ")[0]
         entry = r["sseqid"]
         product = r["Protein names"]
 

@@ -3,6 +3,7 @@ import sys
 from main import pipeline_assembly
 from main import pipeline_since_fastq
 from main import polishing_annotation
+from main import pipeline_assembly_file
 
 
 def launch_pipeline_assembly(args):
@@ -15,6 +16,10 @@ def launch_pipeline_fastq(args):
 
 def launch_annotation_polishing(args):
     polishing_annotation(args.directory)
+
+
+def launch_pipeline_assembly_file(args):
+    pipeline_assembly_file(args.file)
 
 
 def create_parser():
@@ -32,6 +37,11 @@ def create_parser():
                                             help="annotate all assembly.fasta in directory")
     parser_assembly.add_argument("-d", "--directory", metavar="DIRECTORY")
     parser_assembly.set_defaults(func=launch_pipeline_assembly)
+
+    parser_assembly_file = subparsers.add_parser("assembly_file",
+                                                 help="annotate all assembly.fasta written in .txt")
+    parser_assembly_file.add_argument("-f", "--file", metavar="TXT_FILE")
+    parser_assembly_file.set_defaults(func=launch_pipeline_assembly_file)
 
     parser_fastq = subparsers.add_parser("fastq",
                                          help="filter, assembly and annotate all fastqs in directory")

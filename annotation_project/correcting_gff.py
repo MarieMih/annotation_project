@@ -136,6 +136,9 @@ def correcting_gff(input_path):
 
     finding_missing_entries(ext_tsv_df, faa)
 
+    ext_tsv_df["Transcript_id"] = ext_tsv_df["Type"] + "|" + ext_tsv_df["Gene"] + "|" + ext_tsv_df["Entry UniProtKB"]
+    ext_tsv_df["Gene_id"] = ext_tsv_df["Transcript_id"]
+
     ext_tsv_df.to_csv(bakta_tsv_ext, sep='\t', index=False)
     ext_tsv_df.fillna('', inplace=True)
 
@@ -184,6 +187,12 @@ def correcting_gff(input_path):
                     if record['Organism']:
                         organism = f"organism={record['Organism']}"
                         new_record.append(organism)
+                    if record['Transcript_id']:
+                        transcript = f"transcript_id={record['Transcript_id']}"
+                        new_record.append(transcript)
+                    if record['Gene_id']:
+                        gene_id = f"gene_id={record['Gene_id']}"
+                        new_record.append(gene_id)
 
                     new_record = ";".join(new_record)
                     new_row = row.copy()
