@@ -5,6 +5,7 @@ channels:
   - defaults
 dependencies:
   - matplotlib
+  - seaborn
   - pandas
   - numpy
   - fastqc
@@ -12,6 +13,7 @@ dependencies:
   - mmseqs2
   - fastp
   - rasusa
+  - agat
   - upimapi
   - bakta==1.9.4
   - pip

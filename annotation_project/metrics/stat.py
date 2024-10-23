@@ -24,7 +24,6 @@ def process_tsv(input_file):
     })
 
     df = pd.DataFrame(columns=COLUMNS)
-
     with open(input_file, 'r') as file:
         reader = csv.reader(file, delimiter='\t')
 
@@ -148,7 +147,7 @@ def test2():
 def make_stat_file(directory, filename=None):
     files = []
     for curfile in os.listdir(directory):
-        if curfile.endswith('_extended.tsv'):
+        if curfile.endswith('.tsv') and not curfile.startswith('stat_annotation'):
             file_path = os.path.join(directory, curfile)
             files.append(file_path)
 
@@ -180,6 +179,6 @@ def make_stat_file(directory, filename=None):
     plt.savefig(os.path.join(directory, "stat_annotation.png"), bbox_inches='tight')
 
 
-if __name__ == "__main__":
-    TEST = "/storage/data1/marmi/annotation_project_dev/annotation_project/crohn/long/matrix_tsv_entry"
-    make_stat_file(TEST)
+# if __name__ == "__main__":
+#     TEST = "/storage/data1/marmi/annotation_project_dev/annotation_project/crohn/long/matrix_tsv_entry"
+#     make_stat_file(TEST)

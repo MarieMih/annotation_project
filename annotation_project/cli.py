@@ -4,6 +4,8 @@ from main import pipeline_assembly
 from main import pipeline_since_fastq
 from main import polishing_annotation
 from main import pipeline_assembly_file
+from main import pipeline_stat_all_tsv_in_dir
+from main import pipeline_assembly_bakta_only
 
 
 def launch_pipeline_assembly(args):
@@ -20,6 +22,14 @@ def launch_annotation_polishing(args):
 
 def launch_pipeline_assembly_file(args):
     pipeline_assembly_file(args.file)
+
+
+def launch_pipeline_stat_all_tsv_in_dir(args):
+    pipeline_stat_all_tsv_in_dir(args.directory)
+
+
+def launch_pipeline_assembly_bakta_only(args):
+    pipeline_assembly_bakta_only(args.directory)
 
 
 def create_parser():
@@ -52,6 +62,16 @@ def create_parser():
                                           help="polish bakta annotation in directory")
     parser_polish.add_argument("-d", "--directory", metavar="DIRECTORY")
     parser_polish.set_defaults(func=launch_annotation_polishing)
+
+    parser_stat = subparsers.add_parser("stat",
+                                        help="stat all tsv files in directory")
+    parser_stat.add_argument("-d", "--directory", metavar="DIRECTORY")
+    parser_stat.set_defaults(func=launch_pipeline_stat_all_tsv_in_dir)
+
+    parser_stat_bakta = subparsers.add_parser("bakta",
+                                              help="annotate all .fasta in directory by only custom bakta")
+    parser_stat_bakta.add_argument("-d", "--directory", metavar="DIRECTORY")
+    parser_stat_bakta.set_defaults(func=launch_pipeline_assembly_bakta_only)
 
     return parser
 

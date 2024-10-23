@@ -8,6 +8,7 @@ from annotation import annotation
 from pangenome.pangenome_analysis import create_directory_with_soft_links
 from pangenome.pangenome_analysis import pangenome_analysis
 from create_union_protein_fasta_from_gffs import create_fasta_file
+from metrics.stat import make_stat_file
 
 
 def pipeline_since_fastq(directory):
@@ -41,6 +42,8 @@ def pipeline_since_fastq(directory):
     pangenome_analysis(target)
     print("Start creating faa")
     create_fasta_file(tsvs, directory)
+    print("Start stat creation")
+    make_stat_file(target)
 
     asyncio.run(send_smth(text=["Ends annotation"]))
 
@@ -73,6 +76,8 @@ def pipeline_assembly_file(file):
     pangenome_analysis(target)
     print("Start creating faa")
     create_fasta_file(tsvs, directory)
+    print("Start stat creation")
+    make_stat_file(target)
 
     asyncio.run(send_smth(text=["Ends annotation"]))
 
@@ -104,7 +109,8 @@ def pipeline_assembly(directory):
     pangenome_analysis(target)
     print("Start creating faa")
     create_fasta_file(tsvs, directory)
-
+    print("Start stat creation")
+    make_stat_file(target)
     asyncio.run(send_smth(text=["Ends annotation"]))
 
 
@@ -124,3 +130,34 @@ def polishing_annotation(directory):
         annotation(i)
 
     asyncio.run(send_smth(text=["Ends polishing annotation"]))
+
+
+def pipeline_assembly_bakta_only(directory):
+    """
+    Annotate all .fasta in directory by bakta with custom db.
+    """
+    files = []
+    for filename in os.listdir(directory):
+        if filename.endswith('.fasta'):
+            file_path = os.path.join(directory, filename)
+            files.append(file_path)
+
+    tsvs = []
+    target = directory + "/matrix_tsv_bakta"
+
+    for i in files:
+        name = os.path.split(i)[1].partition('.')[0]
+        print(i, name)
+        bakta_annotation(i, name[-24:])
+        annotation_tsv = os.path.split(i)[0] + "/bakta_annotation_" + name[-24:] + "/" + name[-24:] + ".tsv"
+        tsvs.append(annotation_tsv)
+
+    create_directory_with_soft_links(tsvs, target)
+    make_stat_file(target)
+
+
+def pipeline_stat_all_tsv_in_dir(directory):
+    """
+    Make
+    """
+    make_stat_file(directory)

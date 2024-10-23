@@ -136,7 +136,7 @@ def correcting_gff(input_path):
 
     finding_missing_entries(ext_tsv_df, faa)
 
-    ext_tsv_df["Transcript_id"] = ext_tsv_df["Type"] + "|" + ext_tsv_df["Gene"] + "|" + ext_tsv_df["Entry UniProtKB"]
+    ext_tsv_df["Transcript_id"] = ext_tsv_df["Type"] + "|" + ext_tsv_df["Gene"].fillna('') + "|" + ext_tsv_df["Entry UniProtKB"].fillna('')
     ext_tsv_df["Gene_id"] = ext_tsv_df["Transcript_id"]
 
     ext_tsv_df.to_csv(bakta_tsv_ext, sep='\t', index=False)
