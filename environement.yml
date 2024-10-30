@@ -13,6 +13,7 @@ dependencies:
   - mmseqs2
   - fastp
   - rasusa
+  - unicycler
   - agat
   - upimapi
   - bakta==1.9.4

@@ -4,6 +4,7 @@ import re
 import csv
 import pandas as pd
 from finding_missing_entries import finding_missing_entries
+from replace_user_proteins import get_user_protein_information
 
 
 def correcting_gff(input_path):
@@ -49,6 +50,9 @@ def correcting_gff(input_path):
             info_uniref100_table_tsv = os.path.abspath(pth) + "/" + file
             # in this file first column is a uniref100 reference and a second column is a representative member id entry of cluster
             info_uniref100_table_ids = uni + "/uniprotinfo_uniref_representative_ids.tsv"
+        if file.endswith("_userproteins_only.tsv"):
+            userproteins_only = os.path.join(os.path.abspath(pth), file)
+
     # this file contains all information from uniprot for found representative entry of known part bakta annotation
     info_uniref100_tsv = uni + "/uniprotkb/uniprotinfo.tsv"
     # this file contains all information from uniprot for found representative entry of unknown part bakta annotation
@@ -115,24 +119,52 @@ def correcting_gff(input_path):
 
         matching_row = joined_uni[joined_uni['id'] == locus_tag]
 
-        if not matching_row.empty and matching_row['Gene Names'].values[0] != '':
+        if not matching_row.empty:
 
             merged_df.at[i, 'Gene'] = matching_row['Gene Names'].values[0]
             merged_df.at[i, 'Product'] = matching_row['Protein names'].values[0]
             merged_df.at[i, 'Organism'] = matching_row['Organism'].values[0]
             merged_df.at[i, 'Entry UniProtKB'] = matching_row['Entry'].values[0]
 
-        if isinstance(uniprotkb, str):
-            match = re.search(entry, uniprotkb)
-            if match:
-                uniprotkb = match.group(1)
-                merged_df.at[i, 'Entry UniProtKB'] = uniprotkb
-                merged_df.at[i, 'Organism'] = "Escherichia coli"
+        # if isinstance(uniprotkb, str):  # v2
+        #     match = re.search(entry, uniprotkb)
+        #     if match:
+        #         uniprotkb = match.group(1)
+        #         merged_df.at[i, 'Entry UniProtKB'] = uniprotkb
+        #         merged_df.at[i, 'Organism'] = "Escherichia coli"
 
     ext_tsv_df["Gene"] = merged_df["Gene"]
     ext_tsv_df["Product"] = merged_df["Product"]
     ext_tsv_df["Organism"] = merged_df["Organism"]
     ext_tsv_df["Entry UniProtKB"] = merged_df["Entry UniProtKB"]
+
+
+
+    ### new block
+
+    try:
+        userprotein_df = get_user_protein_information(userproteins_only)
+
+        for i in range(len(ext_tsv_df)):
+
+            locus_tag = ext_tsv_df.at[i, 'Locus Tag']
+
+            matching_row = userprotein_df[userprotein_df['Locus Tag'] == locus_tag]
+
+            if not matching_row.empty:
+
+                ext_tsv_df.at[i, 'Gene'] = matching_row['Gene Names'].values[0]
+                ext_tsv_df.at[i, 'Product'] = matching_row['Protein names'].values[0]
+                ext_tsv_df.at[i, 'Organism'] = matching_row['Organism'].values[0]
+                ext_tsv_df.at[i, 'Entry UniProtKB'] = matching_row['Entry'].values[0]
+
+    except:
+        print("Userprotein_only file is empty.")
+
+    ### new block
+
+
+
 
     finding_missing_entries(ext_tsv_df, faa)
 

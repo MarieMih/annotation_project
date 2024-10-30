@@ -54,9 +54,11 @@ def divide_tsv(input_file):
 
                 if unirefkb == uniprotkb:
                     writer1.writerow(row)
-                else:
-                    # writer0.writerow(row)
-                    writer2.writerow(row)
+                # else:
+                #     writer0.writerow(row)  # change comparing to prev version!!
+                #     # writer2.writerow(row)
+                writer0.writerow(row)  # v3
+        
             elif 'UniRef100' in row_str and 'UserProtein' not in row_str:
                 writer2.writerow(row)
             else:

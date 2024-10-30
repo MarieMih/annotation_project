@@ -26,5 +26,9 @@ def extract_fasta_records(tsv_file, fasta_file, output_fasta_file):
 
 
 def catch_ids(tsv_file, fasta_file):
+    """
+    Take '_cds_sorf.tsv' (that contains locus_tag of records without bakta-UniRef100 or UserProteins-UniProtKB)
+    and find all UniProt IDs.
+    """
     output_fasta_file = tsv_file.rpartition('.')[0]+"_by_bakta_tag.faa"
     extract_fasta_records(tsv_file, fasta_file, output_fasta_file)
