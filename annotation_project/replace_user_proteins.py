@@ -48,7 +48,7 @@ def get_user_protein_information(tsv):
     df = pd.read_csv(os.path.join(upimapi_dir, "uniprotinfo.tsv"), sep="\t", header=0)
     df['Gene Names'] = df['Gene Names'].str.split().str[0]
 
-    df = df[["Entry", "Gene Names", "Protein names", "Organism"]]
+    df = df[["Entry", "Gene Names", "Protein names", "Organism", "Gene Ontology (GO)", "KEGG", "UniPathway", "Pathway", "Keywords"]]  # new!!!!!!!!!!!!!!!!!
     df = df.merge(df_origin, how='right', left_on='Entry', right_on='UserProtein')
     df = df.drop(columns=['UserProtein'])
 

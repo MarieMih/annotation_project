@@ -161,3 +161,74 @@ def pipeline_stat_all_tsv_in_dir(directory):
     Make
     """
     make_stat_file(directory)
+
+
+def polishing_annotation_debug(directory):
+    """
+    Fortunately, .fasta files could be in one directory.
+    """
+    files = []
+    for filename in os.listdir(directory):
+        if filename.endswith('.fasta'):
+            file_path = os.path.join(directory, filename)
+            files.append(file_path)
+
+    tsvs = []
+    target = directory + "/matrix_tsv"
+
+    for i in files:
+        name = os.path.split(i)[1].partition('.')[0]
+        print(i, name)
+        annotation_tsv = os.path.split(i)[0] + "/bakta_annotation_" + name[-24:] + "/" + name[-24:] + ".tsv"
+        # annotation(annotation_tsv)
+        annotation_tsv = os.path.split(i)[0] + "/bakta_annotation_" + name[-24:] + "/" + name[-24:] + "_extended.tsv"
+        tsvs.append(annotation_tsv)
+
+    create_directory_with_soft_links(tsvs, target)
+    print("Start pangenome")
+    pangenome_analysis(target)
+    print("Start creating faa")
+    create_fasta_file(tsvs, directory)
+    print("Start stat creation")
+    make_stat_file(target)
+    asyncio.run(send_smth(text=["Ends annotation"]))
+
+
+
+
+# polishing_annotation_debug("/storage/data1/marmi/annotation_project/fidelity_dataset_v3")
+
+
+def polishing_annotation_for_cohort(directory):
+    """
+    Fortunately, .fasta files could be in one directory.
+    """
+    files = []
+    for filename in os.listdir(directory):
+        if filename.endswith('_sub'):
+            file_path = os.path.join(directory, filename)
+            files.append(file_path)
+
+    tsvs = []
+    target = directory + "/matrix_tsv"
+
+    for i in files:
+        name = os.path.split(i)[1]
+        name = name.replace("_sub", "").replace("assembly_", "")
+        print(i, name)
+        if os.path.exists(os.path.split(i)[0] + "/bakta_annotation"):
+            os.rename(os.path.split(i)[0] + "/bakta_annotation", os.path.split(i)[0] + "/bakta_annotation_" + name[-24:])
+        annotation_tsv = os.path.split(i)[0] + "/bakta_annotation_" + name[-24:] + "/" + name[-24:] + ".tsv"
+        # annotation(annotation_tsv)
+        annotation_tsv = os.path.split(i)[0] + "/bakta_annotation_" + name[-24:] + "/" + name[-24:] + "_extended.tsv"
+        tsvs.append(annotation_tsv)
+
+
+    create_directory_with_soft_links(tsvs, target)
+    print("Start pangenome")
+    #pangenome_analysis(target)
+    print("Start creating faa")
+    create_fasta_file(tsvs, directory)
+    print("Start stat creation")
+    make_stat_file(target)
+    asyncio.run(send_smth(text=["Ends annotation"]))

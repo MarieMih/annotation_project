@@ -60,8 +60,8 @@ def correcting_gff(input_path):
     # in this file first column is a unique protein id from bakta and a second column is a representative member id entry of cluster (unknown part)
     info_unknown_table_tsv = uni + "/uniprotkb/annotation/UPIMAPI_results.tsv"
 
-    unknown_df = pd.read_csv(info_unknown_table_tsv, sep="\t", usecols=range(2), header=0)
-    unknown_info = pd.read_csv(info_unknown_tsv, sep="\t", header=0, index_col=0)
+    # unknown_df = pd.read_csv(info_unknown_table_tsv, sep="\t", usecols=range(2), header=0)
+    # unknown_info = pd.read_csv(info_unknown_tsv, sep="\t", header=0, index_col=0)
 
     # pd.set_option('display.max_columns', None)
     # pd.set_option('display.max_rows', 30)
@@ -71,27 +71,28 @@ def correcting_gff(input_path):
     ext_tsv_df = pd.read_csv(bakta_tsv_ext, sep="\t", header=None, comment='#',
                              names=['Sequence Id', 'Type', 'Start', 'Stop', 'Strand', 'Locus Tag', 'Gene', 'Product', 'DbXrefs'])
 
-    ### unknown proteins
+    # ### unknown proteins
 
-    joined_unknown = unknown_df.join(unknown_info, on="sseqid")
-    joined_unknown['Gene Names'] = joined_unknown['Gene Names'].str.split().str[0]  # could be a lot of gene names, taking only first
-    merged_df = ext_tsv_df.merge(joined_unknown, left_on="Locus Tag", right_on='qseqid', suffixes=('', '_new'), how="left")
-    joined_unknown.fillna('', inplace=True)
+    # joined_unknown = unknown_df.join(unknown_info, on="sseqid")
+    # joined_unknown['Gene Names'] = joined_unknown['Gene Names'].str.split().str[0]  # could be a lot of gene names, taking only first
+    # merged_df = ext_tsv_df.merge(joined_unknown, left_on="Locus Tag", right_on='qseqid', suffixes=('', '_new'), how="left")
+    # joined_unknown.fillna('', inplace=True)
 
-    for i in range(len(merged_df)):
+    # for i in range(len(merged_df)):
 
-        locus_tag = merged_df.at[i, 'Locus Tag']
-        matching_row = joined_unknown[joined_unknown['qseqid'] == locus_tag]
+    #     locus_tag = merged_df.at[i, 'Locus Tag']
+    #     matching_row = joined_unknown[joined_unknown['qseqid'] == locus_tag]
 
-        if not matching_row.empty and matching_row['Gene Names'].values[0] != '':
-            merged_df.at[i, 'Gene'] = matching_row['Gene Names'].values[0]
-            merged_df.at[i, 'Product'] = matching_row['Protein names'].values[0]
-            merged_df.at[i, 'Organism'] = matching_row['Organism'].values[0]
-            merged_df.at[i, 'Entry UniProtKB'] = matching_row['sseqid'].values[0]
+    #     if not matching_row.empty and matching_row['Gene Names'].values[0] != '':
+    #         merged_df.at[i, 'Gene'] = matching_row['Gene Names'].values[0]
+    #         merged_df.at[i, 'Product'] = matching_row['Protein names'].values[0]
+    #         merged_df.at[i, 'Organism'] = matching_row['Organism'].values[0]
+    #         merged_df.at[i, 'Entry UniProtKB'] = matching_row['sseqid'].values[0]
 
-    ext_tsv_df["Gene"] = merged_df["Gene"]
-    ext_tsv_df["Product"] = merged_df["Product"]
-    ext_tsv_df["Organism"] = merged_df["Organism"]
+    # ext_tsv_df["Gene"] = merged_df["Gene"]
+    # ext_tsv_df["Product"] = merged_df["Product"]
+    # ext_tsv_df["Organism"] = merged_df["Organism"]
+    ext_tsv_df["Organism"] = ""
     ext_tsv_df.to_csv(bakta_tsv_ext, sep='\t', index=False)
 
     ### known proteins
@@ -111,6 +112,8 @@ def correcting_gff(input_path):
     merged_df = ext_tsv_df.merge(joined_uni, left_on="Locus Tag", right_on='id', suffixes=('', '_new'), how="left")
     joined_uni.fillna('', inplace=True)
 
+
+####### begin - rewrite UniRef100 records
     for i in range(len(merged_df)):
 
         locus_tag = merged_df.at[i, 'Locus Tag']
@@ -125,6 +128,11 @@ def correcting_gff(input_path):
             merged_df.at[i, 'Product'] = matching_row['Protein names'].values[0]
             merged_df.at[i, 'Organism'] = matching_row['Organism'].values[0]
             merged_df.at[i, 'Entry UniProtKB'] = matching_row['Entry'].values[0]
+            merged_df.at[i, 'GO'] = matching_row['Gene Ontology (GO)'].values[0]  # new!!!!!!!!!!!!
+            merged_df.at[i, 'KEGG'] = matching_row['KEGG'].values[0]  # new!!!!!!!!!!!!!
+            merged_df.at[i, 'UniPathway'] = matching_row['UniPathway'].values[0]  # new!!!!!!!!!!!!!
+            merged_df.at[i, 'Pathway'] = matching_row['Pathway'].values[0]  # new!!!!!!!!!!!!!
+            merged_df.at[i, 'Keywords'] = matching_row['Keywords'].values[0]  # new!!!!!!!!!!!!!
 
         # if isinstance(uniprotkb, str):  # v2
         #     match = re.search(entry, uniprotkb)
@@ -136,12 +144,14 @@ def correcting_gff(input_path):
     ext_tsv_df["Gene"] = merged_df["Gene"]
     ext_tsv_df["Product"] = merged_df["Product"]
     ext_tsv_df["Organism"] = merged_df["Organism"]
-    ext_tsv_df["Entry UniProtKB"] = merged_df["Entry UniProtKB"]
+    ext_tsv_df["GO"] = merged_df["GO"]  # new!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ext_tsv_df["KEGG"] = merged_df["KEGG"]  # new!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    ext_tsv_df['UniPathway'] = merged_df['UniPathway']  # new!!!!!!!!!!!!!
+    ext_tsv_df['Pathway'] = merged_df['Pathway']  # new!!!!!!!!!!!!!
+    ext_tsv_df['Keywords'] = merged_df['Keywords']  # new!!!!!!!!!!!!!
+####### end - rewrite UniRef100 records
 
-
-
-    ### new block
-
+####### begin - rewrite UserProtein data
     try:
         userprotein_df = get_user_protein_information(userproteins_only)
 
@@ -157,16 +167,18 @@ def correcting_gff(input_path):
                 ext_tsv_df.at[i, 'Product'] = matching_row['Protein names'].values[0]
                 ext_tsv_df.at[i, 'Organism'] = matching_row['Organism'].values[0]
                 ext_tsv_df.at[i, 'Entry UniProtKB'] = matching_row['Entry'].values[0]
-
+                ext_tsv_df.at[i, 'GO'] = matching_row['Gene Ontology (GO)'].values[0]  # new!!!!!!!!!!!!
+                ext_tsv_df.at[i, 'KEGG'] = matching_row['KEGG'].values[0]  # new!!!!!!!!!!!!!
+                ext_tsv_df.at[i, 'UniPathway'] = matching_row['UniPathway'].values[0]  # new!!!!!!!!!!!!!
+                ext_tsv_df.at[i, 'Pathway'] = matching_row['Pathway'].values[0]  # new!!!!!!!!!!!!!
+                ext_tsv_df.at[i, 'Keywords'] = matching_row['Keywords'].values[0]  # new!!!!!!!!!!!!!
     except:
         print("Userprotein_only file is empty.")
+####### end - rewrite UserProtein data
 
-    ### new block
-
-
-
-
+####### begin - rewrite all the rest records
     finding_missing_entries(ext_tsv_df, faa)
+####### end - rewrite all the rest records
 
     ext_tsv_df["Transcript_id"] = ext_tsv_df["Type"] + "|" + ext_tsv_df["Gene"].fillna('') + "|" + ext_tsv_df["Entry UniProtKB"].fillna('')
     ext_tsv_df["Gene_id"] = ext_tsv_df["Transcript_id"]
@@ -189,42 +201,42 @@ def correcting_gff(input_path):
                     continue
                 pairs = row[8].split(';')
                 parsed_dict = {pair.split('=', 1)[0]: pair.split('=', 1)[1] for pair in pairs}
-                id = ext_tsv_df[ ext_tsv_df['Locus Tag'] == parsed_dict.get('locus_tag')]
+                id = ext_tsv_df[ext_tsv_df['Locus Tag'] == parsed_dict.get('locus_tag')]
                 if id.empty:
                     w.write('\t'.join(row)+"\n")
                 else:
                     record = id.iloc[0]
                     new_record = []
                     if record['Locus Tag']:
-                        ID = f"ID={record['Locus Tag']}"
-                        new_record.append(ID)
+                        new_record.append(f"ID={record['Locus Tag']}")
                     if record['Product']:
-                        Name = f"Name={record['Product'].replace(';', ',')}"
-                        new_record.append(Name)
+                        new_record.append(f"Name={record['Product'].replace(';', ',')}")
                     if record['Locus Tag']:
-                        locus_tag = f"locus_tag={record['Locus Tag']}"
-                        new_record.append(locus_tag)
+                        new_record.append(f"locus_tag={record['Locus Tag']}")
                     if record['Product']:
-                        product = f"product={record['Product'].replace(';', ',')}"
-                        new_record.append(product)
+                        new_record.append(f"product={record['Product'].replace(';', ',')}")
                     if record['DbXrefs']:
-                        Dbxref = f"Dbxref={record['DbXrefs']}"
-                        new_record.append(Dbxref)
+                        new_record.append(f"Dbxref={record['DbXrefs']}")
                     if record['Gene']:
-                        gene = f"gene={record['Gene']}"
-                        new_record.append(gene)
+                        new_record.append(f"gene={record['Gene']}")
                     if record['Entry UniProtKB']:
-                        entry = f"entry={record['Entry UniProtKB']}"
-                        new_record.append(entry)
+                        new_record.append(f"entry={record['Entry UniProtKB']}")
                     if record['Organism']:
-                        organism = f"organism={record['Organism']}"
-                        new_record.append(organism)
+                        new_record.append(f"organism={record['Organism']}")
                     if record['Transcript_id']:
-                        transcript = f"transcript_id={record['Transcript_id']}"
-                        new_record.append(transcript)
+                        new_record.append(f"transcript_id={record['Transcript_id']}")
                     if record['Gene_id']:
-                        gene_id = f"gene_id={record['Gene_id']}"
-                        new_record.append(gene_id)
+                        new_record.append(f"gene_id={record['Gene_id']}")
+                    if record['GO']:
+                        new_record.append(f"go={record['GO']}")
+                    if record['KEGG']:
+                        new_record.append(f"kegg={record['KEGG']}")
+                    if record['UniPathway']:
+                        new_record.append(f"unipathway={record['UniPathway']}")
+                    if record['Pathway']:
+                        new_record.append(f"pathway={record['Pathway']}")
+                    if record['Keywords']:
+                        new_record.append(f"keywords={record['Keywords']}")
 
                     new_record = ";".join(new_record)
                     new_row = row.copy()

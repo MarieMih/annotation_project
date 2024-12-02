@@ -8,11 +8,11 @@ def divide_tsv(input_file):
     and divides into six files.
     """
     pref = input_file.rpartition('.')[0]
-    output_file0 = pref + '_userproteins_only.tsv'  #
-    output_file1 = pref + '_userproteins.tsv'       #
-    output_file2 = pref + '_uniref100.tsv'          #
-    output_file3 = pref + '_semidefined.tsv'        #
-    output_file3_1 = pref + '_cds_sorf.tsv'         #
+    output_file0 = pref + '_userproteins_only.tsv'  # для которых есть UserProtein независимо от uniref100
+    output_file1 = pref + '_userproteins.tsv'       # для тех, у которых UserProtein и Uniref100 совпадают
+    output_file2 = pref + '_uniref100.tsv'          # с uniref100 и без UserProtein, для которых вытягиваются id Uniprot без проверки
+    output_file3 = pref + '_semidefined.tsv'        # все, у кого нет UserProtein и нет uniref100
+    output_file3_1 = pref + '_cds_sorf.tsv'         # белки, у которых нет UserProtein и нет uniref100
     output_file3_2 = pref + '_rna.tsv'              #
 
     with open(input_file, 'r', newline='') as infile,          \

@@ -22,7 +22,7 @@ def create_presence_absence_matrix(directory):
         if filename.endswith('extended.tsv'):
             file_path = os.path.join(directory, filename)
             df = pd.read_csv(file_path, sep='\t', header=None)
-            gene_ids = df[10].unique()
+            gene_ids = df[15].unique()
             gene_dict[filename] = set(gene_ids)
 
     all_genes = list(set.union(*gene_dict.values()))

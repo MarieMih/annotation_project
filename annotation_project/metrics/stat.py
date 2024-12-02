@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 COLUMNS = ["key", "sample_name", 'empty_gene_name', 'non_empty_gene_name', 'gene_name_uni', 'user_protein', 'total_lines', 'uncharacterized_protein', 'hypothetical_protein', 'uniprotkb', 'uniprotkb_uni']
-
+# COLUMNS = ["key", "sample_name", 'empty_gene_name', 'non_empty_gene_name', 'gene_name_uni', 'user_protein', 'total_lines', 'uncharacterized_protein', 'hypothetical_protein']
 
 def process_tsv(input_file):
     counts = defaultdict(lambda: {
@@ -49,9 +49,9 @@ def process_tsv(input_file):
             if "hypothetical protein" in row[7]:
                 counts[key]['hypothetical_protein'] += 1
 
-            if row[10] != '':
+            if row[15] != '':
                 counts[key]['uniprotkb'] += 1
-                counts[key]['uniprotkb_uni'].add(row[10])
+                counts[key]['uniprotkb_uni'].add(row[15])
 
     print(f"{os.path.split(input_file)[1]}")
 
@@ -68,7 +68,7 @@ def process_tsv(input_file):
         # print(f"  UniProtKB (unique): {len(count['uniprotkb_uni'])}")
         # print()
         df.loc[len(df.index)] = [key, count['sample_name'], count['empty_sixth'], count['non_empty_sixth'], len(count['gene_uni']), count['user_protein'], count['total_lines'], count['uncharacterized_protein'], count['hypothetical_protein'], count['uniprotkb'], len(count['uniprotkb_uni'])]
-
+        # df.loc[len(df.index)] = [key, count['sample_name'], count['empty_sixth'], count['non_empty_sixth'], len(count['gene_uni']), count['user_protein'], count['total_lines'], count['uncharacterized_protein'], count['hypothetical_protein']]
     df = df[df.key != "Type"]
 
     return df

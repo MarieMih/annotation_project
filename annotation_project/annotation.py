@@ -13,6 +13,7 @@ from catch_ids import catch_ids
 from correcting_gff import correcting_gff
 from converting_to_gtf import convert_gff_to_gtf
 
+UPIMAPI_RESOURCES = "/storage/data1/marmi/upimapi_databases"
 
 def annotation(start_file):
     # gets tsv file!!
@@ -44,6 +45,7 @@ def annotation(start_file):
         log.error('Wrong genome file format!', exc_info=True)
         sys.exit('ERROR: wrong genome file format!')
 
+###### begin - block for records with UniRef100 and without UserProtein
     try:
         extract_uniref(uniref100)
     except:
@@ -63,21 +65,43 @@ def annotation(start_file):
         log.error('error while coverting ids!', exc_info=True)
         sys.exit('ERROR: converting_uniref_to_uniprotkb failed!')
 
+    # tmp = os.path.join(kb_output, "tmp")
     result_upimapi_ref2kb = subprocess.run(['upimapi', '-i', kb_input_upimapi,
                                             '-o', kb_output,
                                             '--from-db', 'UniProtKB AC/ID',
-                                            '--to-db', 'UniProtKB'],
+                                            '--to-db', 'UniProtKB'],  # changed from UniProtKB to UniProtKB/Swiss-Prot
                                            check=True)
+
+    # ids = []
+    # with open(os.path.join(tmp, "uniprotinfo.tsv"), "r") as f:
+    #     i = f.readline()
+    #     for i in f:
+    #         ids.append(i.split("\t")[0])
+
+    # with open(os.path.join(tmp, "uniprotinfo_ids.csv"), "w") as f:
+    #     f.write(",".join(ids))
+
+    # result_upimapi_ref2kb = subprocess.run(['upimapi', '-i', os.path.join(tmp, "uniprotinfo_ids.csv"),
+    #                                         '-o', kb_output,
+    #                                         '--from-db', 'UniProtKB AC/ID',
+    #                                         '--to-db', 'UniProtKB'],
+    #                                        check=True)
+###### end - block for records with UniRef100 and without UserProtein
+
+######## begin - block for records without UniRef100 and without UserProtein
     try:
         catch_ids(kb_tsv, kb_faa)
     except:
         log.error('catch_ids error!', exc_info=True)
         sys.exit('ERROR: catch_ids failed!')
 
-    result_anno = subprocess.run(['upimapi', '-i', annotation_input,
-                                             '-o', annotation_output,
-                                             '-db', 'uniprot'],
-                                 check=True)
+    # result_anno = subprocess.run(['upimapi', '-i', annotation_input,
+    #                                          '-o', annotation_output,
+    #                                          '-t', '8',
+    #                                          '-rd', UPIMAPI_RESOURCES,
+    #                                          '-db', 'uniprot'],  # changed from uniprot to swissprot
+    #                              check=True)
+######## end - block for records without UniRef100 and without UserProtein
 
     try:
         file_annotation_gff = correcting_gff(converting)
