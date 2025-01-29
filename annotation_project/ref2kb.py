@@ -5,7 +5,8 @@ import ast
 def converting_uniref_to_uniprotkb(input_file):
     """
     Gets id of representation members and find uniprotkb ids.
-    Input: uniprotinfo.tsv from output of upimapi with information about representation members
+    Input: uniprotinfo.tsv from output of upimapi with information about representation members.
+    Output: _uniref_representative_ids.tsv/.csv.
     """
 
     pref = input_file.rpartition('.')[0]

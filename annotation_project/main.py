@@ -223,7 +223,6 @@ def polishing_annotation_for_cohort(directory):
         annotation_tsv = os.path.split(i)[0] + "/bakta_annotation_" + name[-24:] + "/" + name[-24:] + "_extended.tsv"
         tsvs.append(annotation_tsv)
 
-
     create_directory_with_soft_links(tsvs, target)
     print("Start pangenome")
     #pangenome_analysis(target)

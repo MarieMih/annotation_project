@@ -15,24 +15,27 @@ from converting_to_gtf import convert_gff_to_gtf
 
 UPIMAPI_RESOURCES = "/storage/data1/marmi/upimapi_databases"
 
+
 def annotation(start_file):
+    """
+    Modification of Bakta output.
+    """
     # gets tsv file!!
 
     log = logging.getLogger('ANNOTATION')
 
     pref = start_file.rpartition('.')[0]
-    uniref100 = pref + '_uniref100.tsv'
-    uniref100_input_upimapi = pref + '_uniref100_uniref100_ids.csv'
-    uniref100_output = pref + '_upimapi_ref2ref'
-    kb = uniref100_output + '/uniprotinfo.tsv'
-    kb_input_upimapi = uniref100_output + '/uniprotinfo_uniref_representative_ids.csv'
-    kb_output = uniref100_output + '/uniprotkb'
+    uniref100_data = pref + '_uniref100.tsv'
+    uniref100_upimapi_search_input_file = pref + '_uniref100_uniref100_ids.csv'
+    uniref100_upimapi_search_output_directory = pref + '_upimapi_ref2ref'
+    kb_representative_data = uniref100_upimapi_search_output_directory + '/uniprotinfo.tsv'
+    kb_upimapi_input_file = uniref100_upimapi_search_output_directory + '/uniprotinfo_uniref_representative_ids.csv'
+    kb_upimapi_output_directory = uniref100_upimapi_search_output_directory + '/uniprotkb'
     kb_tsv = pref + '_cds_sorf.tsv'
     kb_faa = pref + ".faa"
-    annotation_input = kb_tsv.rpartition('.')[0]+"_by_bakta_tag.faa"
-    annotation_output = kb_output + "/annotation"
-    converting = os.path.split(start_file)[0]
+    file_for_converting = os.path.split(start_file)[0]
 
+###### begin - block of creating files for process
     if os.path.exists(start_file):
         print(f'The file {start_file} exists')
     else:
@@ -44,67 +47,46 @@ def annotation(start_file):
     except:
         log.error('Wrong genome file format!', exc_info=True)
         sys.exit('ERROR: wrong genome file format!')
+###### end - block of creating files for process
 
 ###### begin - block for records with UniRef100 and without UserProtein
     try:
-        extract_uniref(uniref100)
+        extract_uniref(uniref100_data)
     except:
         log.error('extract_uniref error!', exc_info=True)
         sys.exit('ERROR: extract_uniref failed!')
 
-    result_upimapi_ref2ref = subprocess.run(['upimapi', '-i',
-                                             uniref100_input_upimapi,
-                                             '-o', uniref100_output,
-                                             '--from-db', 'UniRef100', '--to-db',
-                                             'UniRef100'],
+    result_upimapi_ref2ref = subprocess.run(['upimapi',
+                                             '-i', uniref100_upimapi_search_input_file,
+                                             '-o', uniref100_upimapi_search_output_directory,
+                                             '--from-db', 'UniRef100',
+                                             '--to-db', 'UniRef100'],
                                             check=True)
 
     try:
-        converting_uniref_to_uniprotkb(kb)
+        converting_uniref_to_uniprotkb(kb_representative_data)
     except:
         log.error('error while coverting ids!', exc_info=True)
         sys.exit('ERROR: converting_uniref_to_uniprotkb failed!')
 
-    # tmp = os.path.join(kb_output, "tmp")
-    result_upimapi_ref2kb = subprocess.run(['upimapi', '-i', kb_input_upimapi,
-                                            '-o', kb_output,
+    result_upimapi_ref2kb = subprocess.run(['upimapi',
+                                            '-i', kb_upimapi_input_file,
+                                            '-o', kb_upimapi_output_directory,
                                             '--from-db', 'UniProtKB AC/ID',
-                                            '--to-db', 'UniProtKB'],  # changed from UniProtKB to UniProtKB/Swiss-Prot
+                                            '--to-db', 'UniProtKB'],
                                            check=True)
-
-    # ids = []
-    # with open(os.path.join(tmp, "uniprotinfo.tsv"), "r") as f:
-    #     i = f.readline()
-    #     for i in f:
-    #         ids.append(i.split("\t")[0])
-
-    # with open(os.path.join(tmp, "uniprotinfo_ids.csv"), "w") as f:
-    #     f.write(",".join(ids))
-
-    # result_upimapi_ref2kb = subprocess.run(['upimapi', '-i', os.path.join(tmp, "uniprotinfo_ids.csv"),
-    #                                         '-o', kb_output,
-    #                                         '--from-db', 'UniProtKB AC/ID',
-    #                                         '--to-db', 'UniProtKB'],
-    #                                        check=True)
 ###### end - block for records with UniRef100 and without UserProtein
 
-######## begin - block for records without UniRef100 and without UserProtein
-    try:
-        catch_ids(kb_tsv, kb_faa)
-    except:
-        log.error('catch_ids error!', exc_info=True)
-        sys.exit('ERROR: catch_ids failed!')
-
-    # result_anno = subprocess.run(['upimapi', '-i', annotation_input,
-    #                                          '-o', annotation_output,
-    #                                          '-t', '8',
-    #                                          '-rd', UPIMAPI_RESOURCES,
-    #                                          '-db', 'uniprot'],  # changed from uniprot to swissprot
-    #                              check=True)
-######## end - block for records without UniRef100 and without UserProtein
+# ######## begin - block for records without UniRef100 and without UserProtein
+#     try:
+#         catch_ids(kb_tsv, kb_faa)
+#     except:
+#         log.error('catch_ids error!', exc_info=True)
+#         sys.exit('ERROR: catch_ids failed!')
+# ######## end - block for records without UniRef100 and without UserProtein
 
     try:
-        file_annotation_gff = correcting_gff(converting)
+        file_annotation_gff = correcting_gff(file_for_converting)
     except:
         log.error('correcting gff error!', exc_info=True)
         sys.exit('ERROR: correcting_gff failed!')

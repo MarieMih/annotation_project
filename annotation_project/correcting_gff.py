@@ -47,80 +47,48 @@ def correcting_gff(input_path):
     for file in os.listdir(pth):
         if file.endswith("_uniref100_columns.tsv"):
             # in this file first column is a unique protein id from bakta and a second column is a uniref100 reference from bakta
-            info_uniref100_table_tsv = os.path.abspath(pth) + "/" + file
+            uniref100_table_locus_tag_tsv = os.path.abspath(pth) + "/" + file
             # in this file first column is a uniref100 reference and a second column is a representative member id entry of cluster
-            info_uniref100_table_ids = uni + "/uniprotinfo_uniref_representative_ids.tsv"
+            uniref100_ids = uni + "/uniprotinfo_uniref_representative_ids.tsv"
         if file.endswith("_userproteins_only.tsv"):
             userproteins_only = os.path.join(os.path.abspath(pth), file)
 
     # this file contains all information from uniprot for found representative entry of known part bakta annotation
-    info_uniref100_tsv = uni + "/uniprotkb/uniprotinfo.tsv"
-    # this file contains all information from uniprot for found representative entry of unknown part bakta annotation
-    info_unknown_tsv = uni + "/uniprotkb/annotation/uniprotinfo.tsv"
-    # in this file first column is a unique protein id from bakta and a second column is a representative member id entry of cluster (unknown part)
-    info_unknown_table_tsv = uni + "/uniprotkb/annotation/UPIMAPI_results.tsv"
-
-    # unknown_df = pd.read_csv(info_unknown_table_tsv, sep="\t", usecols=range(2), header=0)
-    # unknown_info = pd.read_csv(info_unknown_tsv, sep="\t", header=0, index_col=0)
-
-    # pd.set_option('display.max_columns', None)
-    # pd.set_option('display.max_rows', 30)
+    uniref100_representative_tsv = uni + "/uniprotkb/uniprotinfo.tsv"
 
     ############################### meaningful part ###########################
 
-    ext_tsv_df = pd.read_csv(bakta_tsv_ext, sep="\t", header=None, comment='#',
-                             names=['Sequence Id', 'Type', 'Start', 'Stop', 'Strand', 'Locus Tag', 'Gene', 'Product', 'DbXrefs'])
-
-    # ### unknown proteins
-
-    # joined_unknown = unknown_df.join(unknown_info, on="sseqid")
-    # joined_unknown['Gene Names'] = joined_unknown['Gene Names'].str.split().str[0]  # could be a lot of gene names, taking only first
-    # merged_df = ext_tsv_df.merge(joined_unknown, left_on="Locus Tag", right_on='qseqid', suffixes=('', '_new'), how="left")
-    # joined_unknown.fillna('', inplace=True)
-
-    # for i in range(len(merged_df)):
-
-    #     locus_tag = merged_df.at[i, 'Locus Tag']
-    #     matching_row = joined_unknown[joined_unknown['qseqid'] == locus_tag]
-
-    #     if not matching_row.empty and matching_row['Gene Names'].values[0] != '':
-    #         merged_df.at[i, 'Gene'] = matching_row['Gene Names'].values[0]
-    #         merged_df.at[i, 'Product'] = matching_row['Protein names'].values[0]
-    #         merged_df.at[i, 'Organism'] = matching_row['Organism'].values[0]
-    #         merged_df.at[i, 'Entry UniProtKB'] = matching_row['sseqid'].values[0]
-
-    # ext_tsv_df["Gene"] = merged_df["Gene"]
-    # ext_tsv_df["Product"] = merged_df["Product"]
-    # ext_tsv_df["Organism"] = merged_df["Organism"]
-    ext_tsv_df["Organism"] = ""
-    ext_tsv_df.to_csv(bakta_tsv_ext, sep='\t', index=False)
+    extended_tsv_df = pd.read_csv(bakta_tsv_ext, sep="\t",
+                                  header=None,
+                                  comment='#',
+                                  names=['Sequence Id', 'Type', 'Start', 'Stop', 'Strand', 'Locus Tag', 'Gene', 'Product', 'DbXrefs'])
+    extended_tsv_df["Organism"] = ""
+    extended_tsv_df.to_csv(bakta_tsv_ext, sep='\t', index=False)
 
     ### known proteins
 
-    uniref_df_1 = pd.read_csv(info_uniref100_table_tsv, sep="\t", header=None)
-    uniref_df_2 = pd.read_csv(info_uniref100_table_ids, sep="\t", header=None)
-    uniref_df_2 = uniref_df_2.drop_duplicates(subset=0, keep='first')
+    uniref_df_part_1 = pd.read_csv(uniref100_table_locus_tag_tsv, sep="\t", header=None)
+    uniref_df_part_2 = pd.read_csv(uniref100_ids, sep="\t", header=None)
+    uniref_df_part_2 = uniref_df_part_2.drop_duplicates(subset=0, keep='first')
 
-    joined_uni = uniref_df_1.merge(uniref_df_2, left_on=1, right_on=0, how='left', suffixes=('', '_new'), validate='many_to_one')
-    joined_uni = joined_uni[["0", "1_new"]]
-    joined_uni.columns = ['id', 'uniprot']
+    joined_uniref_df = uniref_df_part_1.merge(uniref_df_part_2, left_on=1, right_on=0, how='left', suffixes=('', '_new'), validate='many_to_one')
+    joined_uniref_df = joined_uniref_df[["0", "1_new"]]
+    joined_uniref_df.columns = ['id', 'uniprot']
 
-    uniref_df_3 = pd.read_csv(info_uniref100_tsv, sep="\t", header=0)
-    joined_uni = joined_uni.merge(uniref_df_3, left_on="uniprot", right_on="Entry", how='left', suffixes=('', '_new'))
-    joined_uni['Gene Names'] = joined_uni['Gene Names'].str.split().str[0]
-    ext_tsv_df = pd.read_csv(bakta_tsv_ext, sep="\t", header=0)
-    merged_df = ext_tsv_df.merge(joined_uni, left_on="Locus Tag", right_on='id', suffixes=('', '_new'), how="left")
-    joined_uni.fillna('', inplace=True)
+    uniref_df_part_3 = pd.read_csv(uniref100_representative_tsv, sep="\t", header=0)
+    joined_uniref_df = joined_uniref_df.merge(uniref_df_part_3, left_on="uniprot", right_on="Entry", how='left', suffixes=('', '_new'))
+    joined_uniref_df['Gene Names'] = joined_uniref_df['Gene Names'].str.split().str[0]
+
+    extended_tsv_df = pd.read_csv(bakta_tsv_ext, sep="\t", header=0)
+    merged_df = extended_tsv_df.merge(joined_uniref_df, left_on="Locus Tag", right_on='id', suffixes=('', '_new'), how="left")
+    joined_uniref_df.fillna('', inplace=True)
 
 
 ####### begin - rewrite UniRef100 records
     for i in range(len(merged_df)):
 
         locus_tag = merged_df.at[i, 'Locus Tag']
-        uniprotkb = merged_df.at[i, 'DbXrefs']
-        entry = re.compile(r"UserProtein:[^|]*\|([^,\n]*)")
-
-        matching_row = joined_uni[joined_uni['id'] == locus_tag]
+        matching_row = joined_uniref_df[joined_uniref_df['id'] == locus_tag]
 
         if not matching_row.empty:
 
@@ -128,63 +96,58 @@ def correcting_gff(input_path):
             merged_df.at[i, 'Product'] = matching_row['Protein names'].values[0]
             merged_df.at[i, 'Organism'] = matching_row['Organism'].values[0]
             merged_df.at[i, 'Entry UniProtKB'] = matching_row['Entry'].values[0]
-            merged_df.at[i, 'GO'] = matching_row['Gene Ontology (GO)'].values[0]  # new!!!!!!!!!!!!
-            merged_df.at[i, 'KEGG'] = matching_row['KEGG'].values[0]  # new!!!!!!!!!!!!!
-            merged_df.at[i, 'UniPathway'] = matching_row['UniPathway'].values[0]  # new!!!!!!!!!!!!!
-            merged_df.at[i, 'Pathway'] = matching_row['Pathway'].values[0]  # new!!!!!!!!!!!!!
-            merged_df.at[i, 'Keywords'] = matching_row['Keywords'].values[0]  # new!!!!!!!!!!!!!
+            merged_df.at[i, 'GO'] = matching_row['Gene Ontology (GO)'].values[0]
+            merged_df.at[i, 'KEGG'] = matching_row['KEGG'].values[0]
+            merged_df.at[i, 'UniPathway'] = matching_row['UniPathway'].values[0]
+            merged_df.at[i, 'Pathway'] = matching_row['Pathway'].values[0]
+            merged_df.at[i, 'Keywords'] = matching_row['Keywords'].values[0]
 
-        # if isinstance(uniprotkb, str):  # v2
-        #     match = re.search(entry, uniprotkb)
-        #     if match:
-        #         uniprotkb = match.group(1)
-        #         merged_df.at[i, 'Entry UniProtKB'] = uniprotkb
-        #         merged_df.at[i, 'Organism'] = "Escherichia coli"
-
-    ext_tsv_df["Gene"] = merged_df["Gene"]
-    ext_tsv_df["Product"] = merged_df["Product"]
-    ext_tsv_df["Organism"] = merged_df["Organism"]
-    ext_tsv_df["GO"] = merged_df["GO"]  # new!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    ext_tsv_df["KEGG"] = merged_df["KEGG"]  # new!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    ext_tsv_df['UniPathway'] = merged_df['UniPathway']  # new!!!!!!!!!!!!!
-    ext_tsv_df['Pathway'] = merged_df['Pathway']  # new!!!!!!!!!!!!!
-    ext_tsv_df['Keywords'] = merged_df['Keywords']  # new!!!!!!!!!!!!!
+    extended_tsv_df["Gene"] = merged_df["Gene"]
+    extended_tsv_df["Product"] = merged_df["Product"]
+    extended_tsv_df["Organism"] = merged_df["Organism"]
+    extended_tsv_df["GO"] = merged_df["GO"]
+    extended_tsv_df["KEGG"] = merged_df["KEGG"]
+    extended_tsv_df['UniPathway'] = merged_df['UniPathway']
+    extended_tsv_df['Pathway'] = merged_df['Pathway']
+    extended_tsv_df['Keywords'] = merged_df['Keywords']
 ####### end - rewrite UniRef100 records
 
-####### begin - rewrite UserProtein data
+####### begin - rewrite fields with UserProtein data
     try:
         userprotein_df = get_user_protein_information(userproteins_only)
 
-        for i in range(len(ext_tsv_df)):
+        for i in range(len(extended_tsv_df)):
 
-            locus_tag = ext_tsv_df.at[i, 'Locus Tag']
-
+            locus_tag = extended_tsv_df.at[i, 'Locus Tag']
             matching_row = userprotein_df[userprotein_df['Locus Tag'] == locus_tag]
 
             if not matching_row.empty:
 
-                ext_tsv_df.at[i, 'Gene'] = matching_row['Gene Names'].values[0]
-                ext_tsv_df.at[i, 'Product'] = matching_row['Protein names'].values[0]
-                ext_tsv_df.at[i, 'Organism'] = matching_row['Organism'].values[0]
-                ext_tsv_df.at[i, 'Entry UniProtKB'] = matching_row['Entry'].values[0]
-                ext_tsv_df.at[i, 'GO'] = matching_row['Gene Ontology (GO)'].values[0]  # new!!!!!!!!!!!!
-                ext_tsv_df.at[i, 'KEGG'] = matching_row['KEGG'].values[0]  # new!!!!!!!!!!!!!
-                ext_tsv_df.at[i, 'UniPathway'] = matching_row['UniPathway'].values[0]  # new!!!!!!!!!!!!!
-                ext_tsv_df.at[i, 'Pathway'] = matching_row['Pathway'].values[0]  # new!!!!!!!!!!!!!
-                ext_tsv_df.at[i, 'Keywords'] = matching_row['Keywords'].values[0]  # new!!!!!!!!!!!!!
+                extended_tsv_df.at[i, 'Gene'] = matching_row['Gene Names'].values[0]
+                extended_tsv_df.at[i, 'Product'] = matching_row['Protein names'].values[0]
+                extended_tsv_df.at[i, 'Organism'] = matching_row['Organism'].values[0]
+                extended_tsv_df.at[i, 'Entry UniProtKB'] = matching_row['Entry'].values[0]
+                extended_tsv_df.at[i, 'GO'] = matching_row['Gene Ontology (GO)'].values[0]
+                extended_tsv_df.at[i, 'KEGG'] = matching_row['KEGG'].values[0]
+                extended_tsv_df.at[i, 'UniPathway'] = matching_row['UniPathway'].values[0]
+                extended_tsv_df.at[i, 'Pathway'] = matching_row['Pathway'].values[0]
+                extended_tsv_df.at[i, 'Keywords'] = matching_row['Keywords'].values[0]
     except:
         print("Userprotein_only file is empty.")
-####### end - rewrite UserProtein data
+####### end - rewrite fields with UserProtein data
 
 ####### begin - rewrite all the rest records
-    finding_missing_entries(ext_tsv_df, faa)
+    finding_missing_entries(extended_tsv_df, faa)
 ####### end - rewrite all the rest records
 
-    ext_tsv_df["Transcript_id"] = ext_tsv_df["Type"] + "|" + ext_tsv_df["Gene"].fillna('') + "|" + ext_tsv_df["Entry UniProtKB"].fillna('')
-    ext_tsv_df["Gene_id"] = ext_tsv_df["Transcript_id"]
+    extended_tsv_df["Transcript_id"] = extended_tsv_df["Type"] + "|" + extended_tsv_df["Gene"].fillna('') + "|" + extended_tsv_df["Entry UniProtKB"].fillna('')
+    for i in range(len(extended_tsv_df)):
+        if (extended_tsv_df.at[i, 'Gene'] == "") and (extended_tsv_df.at[i, 'Entry UniProtKB'] == ""):
+            extended_tsv_df.at[i, 'Transcript_id'] = extended_tsv_df.at[i, "Locus Tag"] + "_" + extended_tsv_df.at[i, "Type"]
+    extended_tsv_df["Gene_id"] = extended_tsv_df["Transcript_id"]
 
-    ext_tsv_df.to_csv(bakta_tsv_ext, sep='\t', index=False)
-    ext_tsv_df.fillna('', inplace=True)
+    extended_tsv_df.to_csv(bakta_tsv_ext, sep='\t', index=False)
+    extended_tsv_df.fillna('', inplace=True)
 
     ### creating new gff
 
@@ -201,7 +164,7 @@ def correcting_gff(input_path):
                     continue
                 pairs = row[8].split(';')
                 parsed_dict = {pair.split('=', 1)[0]: pair.split('=', 1)[1] for pair in pairs}
-                id = ext_tsv_df[ext_tsv_df['Locus Tag'] == parsed_dict.get('locus_tag')]
+                id = extended_tsv_df[extended_tsv_df['Locus Tag'] == parsed_dict.get('locus_tag')]
                 if id.empty:
                     w.write('\t'.join(row)+"\n")
                 else:

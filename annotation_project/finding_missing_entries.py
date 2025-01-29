@@ -5,7 +5,7 @@ from Bio import SeqIO
 from create_union_protein_fasta_from_gffs import get_from_upimapi
 
 UPIMAPI_RESOURCES = "/storage/data1/marmi/upimapi_databases"
-UPIMAPI_DATABASE = "uniprot"  # change on uniprot
+UPIMAPI_DATABASE = "uniprot"
 
 QUERY_ALIGN_LENGTH_UP = 1.05
 QUERY_ALIGN_LENGTH_BOTTOM = 0.95
@@ -20,7 +20,7 @@ def finding_missing_entries(df, faa):
     """
 
     missing_entries = df[df["Entry UniProtKB"].isna()]
-    missing_entries = missing_entries[missing_entries["Type"] == "cds"]
+    missing_entries = missing_entries[(missing_entries["Type"] == "cds") | (missing_entries["Type"] == "sorf")]
     missing_entries['A_length'] = abs(missing_entries["Stop"] - missing_entries["Start"] + 1) // 3
     missing_entries_set = set(missing_entries["Locus Tag"])
 
@@ -72,24 +72,14 @@ def finding_missing_entries(df, faa):
 
         # information from UPIMAPI_results.tsv
         ltag = r["qseqid"]
-        # organism = r["Taxonomic lineage (SPECIES)"]
-        # gene = str(r["Gene Names"]).split(" ")[0]
-        # entry = r["sseqid"]
-        # product = r["Protein names"]
-
-        # # write this information to original df
-        # df.loc[df['Locus Tag'] == ltag, ["Organism"]] = organism
-        # df.loc[df['Locus Tag'] == ltag, ["Gene"]] = gene
-        # df.loc[df['Locus Tag'] == ltag, ["Entry UniProtKB"]] = entry
-        # df.loc[df['Locus Tag'] == ltag, ["Product"]] = product
 
         # write this information to original df
         df.loc[df['Locus Tag'] == ltag, ["Organism"]] = r["Taxonomic lineage (SPECIES)"]
         df.loc[df['Locus Tag'] == ltag, ["Gene"]] = str(r["Gene Names"]).split(" ")[0]
         df.loc[df['Locus Tag'] == ltag, ["Entry UniProtKB"]] = r["sseqid"]
         df.loc[df['Locus Tag'] == ltag, ["Product"]] = r["Protein names"]
-        df.loc[df['Locus Tag'] == ltag, ['GO']] = r['Gene Ontology (GO)']  # new!!!!!!!!!!
-        df.loc[df['Locus Tag'] == ltag, ['KEGG']] = r['KEGG']  # new!!!!!!!!!!
-        df.loc[df['Locus Tag'] == ltag, ['UniPathway']] = r['UniPathway']  # new!!!!!!!!!!
-        df.loc[df['Locus Tag'] == ltag, ['Pathway']] = r['Pathway']  # new!!!!!!!!!!
-        df.loc[df['Locus Tag'] == ltag, ['Keywords']] = r['Keywords']  # new!!!!!!!!!!
+        df.loc[df['Locus Tag'] == ltag, ['GO']] = r['Gene Ontology (GO)']
+        df.loc[df['Locus Tag'] == ltag, ['KEGG']] = r['KEGG']
+        df.loc[df['Locus Tag'] == ltag, ['UniPathway']] = r['UniPathway']
+        df.loc[df['Locus Tag'] == ltag, ['Pathway']] = r['Pathway']
+        df.loc[df['Locus Tag'] == ltag, ['Keywords']] = r['Keywords']

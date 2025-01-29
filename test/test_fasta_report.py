@@ -6,7 +6,6 @@ from annotation_project.main import pipeline_assembly_file
 
 TEST_FASTA_DIRECTORY = os.path.join(os.path.split(os.path.realpath(sys.argv[0]))[0], "test_fasta_report_dataset")
 
-
 if __name__ == "__main__":
     cur_dir = os.path.split(os.path.realpath(sys.argv[0]))[0]
     tmp = os.path.join(cur_dir, "tmp")

@@ -16,13 +16,13 @@ def divide_tsv(input_file):
     output_file3_2 = pref + '_rna.tsv'              #
 
     with open(input_file, 'r', newline='') as infile,          \
-         open(output_file1, 'w', newline='') as outfile1,      \
          open(output_file0, 'w', newline='') as outfile0,      \
+         open(output_file1, 'w', newline='') as outfile1,      \
          open(output_file2, 'w', newline='') as outfile2,      \
          open(output_file3, 'w', newline='') as outfile3,      \
          open(output_file3_1, 'w', newline='') as outfile3_1,  \
          open(output_file3_2, 'w', newline='') as outfile3_2:
-        
+
         reader = csv.reader(infile, delimiter='\t')
         writer0 = csv.writer(outfile0, delimiter='\t')
         writer1 = csv.writer(outfile1, delimiter='\t')
@@ -30,37 +30,36 @@ def divide_tsv(input_file):
         writer3 = csv.writer(outfile3, delimiter='\t')
         writer3_1 = csv.writer(outfile3_1, delimiter='\t')
         writer3_2 = csv.writer(outfile3_2, delimiter='\t')
-        
+
         all_the_rest = []
 
         for row in reader:
             row_str = '\t'.join(row)
+
             if 'UserProtein' in row_str and 'UniRef100' not in row_str:
                 writer0.writerow(row)
+
             elif 'UserProtein' in row_str and 'UniRef100' in row_str:
+                writer0.writerow(row)
+
                 uniprotkb = row_str
                 entry = re.compile(r"UserProtein:[^|]*\|([^,]*)")
                 if isinstance(uniprotkb, str):
                     match = re.search(entry, uniprotkb)
                     if match:
                         uniprotkb = match.group(1)
-
                 unirefkb = row_str
                 entry = re.compile(r"UniRef:UniRef100_([^,]*)")
                 if isinstance(unirefkb, str):
                     match = re.search(entry, unirefkb)
                     if match:
                         unirefkb = match.group(1)
-
                 if unirefkb == uniprotkb:
                     writer1.writerow(row)
-                # else:
-                #     writer0.writerow(row)  # change comparing to prev version!!
-                #     # writer2.writerow(row)
-                writer0.writerow(row)  # v3
-        
+
             elif 'UniRef100' in row_str and 'UserProtein' not in row_str:
                 writer2.writerow(row)
+
             else:
                 writer3.writerow(row)
                 all_the_rest.append(row)

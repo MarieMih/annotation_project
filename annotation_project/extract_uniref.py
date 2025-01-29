@@ -5,7 +5,7 @@ import re
 def extract_uniref(input_file):
     """
     Gets uniref100.tsv
-    Input: file _uniref100.tsv from bakta with records containing UniRef100 
+    Input: file _uniref100.tsv from bakta with records containing UniRef100
     Output: _columns.tsv with columns - locus_tag of protein and UniRef100
     Output: _uniref100_ids.csv - all UniRef100 separated by comma for sending to upimapi
     """
@@ -23,14 +23,14 @@ def extract_uniref(input_file):
         reader = csv.reader(infile, delimiter='\t')
         for row in reader:
             if len(row) >= 6:
-                sixth_column = row[5]
-                last_column = row[-1]
+                locus_tag_column = row[5]
+                dbxrefs_column = row[8]
 
-                uniref100_ids = uniref100_pattern.findall(last_column)
+                uniref100_ids = uniref100_pattern.findall(dbxrefs_column)
                 if uniref100_ids:
                     for uniref100_id in uniref100_ids:
                         uniref100_id = uniref100_id.split('UniRef:')[1]
-                        extracted_data.append([sixth_column, uniref100_id])
+                        extracted_data.append([locus_tag_column, uniref100_id])
                         uniref100_list.append(uniref100_id)
 
     with open(output_file_tsv, 'w', newline='') as outfile_tsv:

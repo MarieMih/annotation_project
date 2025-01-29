@@ -3,8 +3,8 @@ import shutil
 import sys
 from annotation_project.main import pipeline_assembly
 
-TEST_FASTA_DIRECTORY = os.path.join(os.path.split(os.path.realpath(sys.argv[0]))[0], "test_fasta_dataset")
 
+TEST_FASTA_DIRECTORY = os.path.join(os.path.split(os.path.realpath(sys.argv[0]))[0], "test_fasta_dataset")
 
 if __name__ == "__main__":
     cur_dir = os.path.split(os.path.realpath(sys.argv[0]))[0]

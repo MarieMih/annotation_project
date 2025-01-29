@@ -11,10 +11,7 @@ def get_user_protein_information(tsv):
     Input: '_userproteins_only.tsv'
     Output: directory from upimapi
     """
-    if os.path.isabs(tsv):
-        pth = os.path.split(tsv)[0]
-    else:
-        pth = os.path.split(os.path.abspath(tsv))[0]
+    pth = os.path.split(os.path.abspath(tsv))[0]
 
     list_ids = os.path.join(pth, "userproteins_ids.csv")
     upimapi_dir = os.path.join(pth, "userprotein_upimapi")
@@ -44,7 +41,7 @@ def get_user_protein_information(tsv):
     subprocess.run(['upimapi', '-i', list_ids,
                     '-o', upimapi_dir],
                    check=True)
-    
+
     df = pd.read_csv(os.path.join(upimapi_dir, "uniprotinfo.tsv"), sep="\t", header=0)
     df['Gene Names'] = df['Gene Names'].str.split().str[0]
 
