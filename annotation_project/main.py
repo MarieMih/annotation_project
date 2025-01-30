@@ -1,13 +1,14 @@
 import os
 import asyncio
+from annotation import annotation
+from create_union_protein_fasta_from_gffs import create_fasta_file
+from pangenome.pangenome_analysis import pangenome_analysis
+from pangenome.pangenome_analysis import create_directory_with_soft_links
+from preparation import assembly_unicycler_pe
 from preparation import bakta_annotation
 from preparation import send_smth
 from preparation import filtering_fastq_pe
-from preparation import assembly_unicycler_pe
-from annotation import annotation
-from pangenome.pangenome_analysis import create_directory_with_soft_links
-from pangenome.pangenome_analysis import pangenome_analysis
-from create_union_protein_fasta_from_gffs import create_fasta_file
+from make_common_protein_fasta import make_common_protein_fasta
 from metrics.stat import make_stat_file
 
 
@@ -231,3 +232,38 @@ def polishing_annotation_for_cohort(directory):
     print("Start stat creation")
     make_stat_file(target)
     asyncio.run(send_smth(text=["Ends annotation"]))
+
+
+def polishing_annotation_debug_new(directory):
+    """
+    Fortunately, .fasta files could be in one directory.
+    """
+    files = []
+    for file_path in os.listdir(directory):
+        if file_path.startswith('bakta_annotation'):
+            files.append(os.path.join(directory, file_path))
+
+    tsvs = []
+    path_for_tsvs = os.path.join(directory, "matrix_tsv")
+
+    for i in files:
+        name = os.path.split(i)[-1].replace("bakta_annotation_", "")
+        print(i, name)
+        annotation_tsv = os.path.join(i, name[-24:] + ".tsv")
+        annotation(annotation_tsv)
+        annotation_tsv = os.path.join(i, name[-24:] + "_extended.tsv")
+        tsvs.append(annotation_tsv)
+
+    make_common_protein_fasta(tsvs)
+
+    create_directory_with_soft_links(tsvs, path_for_tsvs)
+    # print("Start pangenome")
+    # pangenome_analysis(path_for_tsvs)
+    # print("Start creating faa")
+    # create_fasta_file(tsvs, directory)
+    # print("Start stat creation")
+    # make_stat_file(path_for_tsvs)
+    asyncio.run(send_smth(text=["Ends annotation"]))
+
+
+polishing_annotation_debug_new("/storage/data1/marmi/annotation_project/rebuilding_data_test")
