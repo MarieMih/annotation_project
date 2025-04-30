@@ -9,6 +9,7 @@ import seaborn as sns
 COLUMNS = ["key", "sample_name", 'empty_gene_name', 'non_empty_gene_name', 'gene_name_uni', 'user_protein', 'total_lines', 'uncharacterized_protein', 'hypothetical_protein', 'uniprotkb', 'uniprotkb_uni']
 # COLUMNS = ["key", "sample_name", 'empty_gene_name', 'non_empty_gene_name', 'gene_name_uni', 'user_protein', 'total_lines', 'uncharacterized_protein', 'hypothetical_protein']
 
+
 def process_tsv(input_file):
     counts = defaultdict(lambda: {
         'sample_name': os.path.splitext(os.path.split(input_file)[1])[0],
@@ -49,9 +50,9 @@ def process_tsv(input_file):
             if "hypothetical protein" in row[7]:
                 counts[key]['hypothetical_protein'] += 1
 
-            if row[15] != '':
+            if row[10] != '':
                 counts[key]['uniprotkb'] += 1
-                counts[key]['uniprotkb_uni'].add(row[15])
+                counts[key]['uniprotkb_uni'].add(row[10])
 
     print(f"{os.path.split(input_file)[1]}")
 
@@ -97,7 +98,7 @@ def test():
 
     for i, col in enumerate(columns_plot):
         bars = ax.bar(x + i * bar_width, df[col], width=bar_width, label=col)
-        
+
         for bar in bars:
             height = bar.get_height()
             ax.text(bar.get_x() + bar.get_width() / 2, height, f'{height}', ha='center', va='bottom')

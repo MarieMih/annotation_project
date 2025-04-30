@@ -34,11 +34,3 @@ def make_common_protein_fasta(tsvs):
                                  "-c", "0.8",
                                  "--min-seq-id", "0.9"],
                                 check=True)
-
-# integration test
-# test_list = ["/storage/data1/marmi/annotation_project/rebuilding_data_test/bakta_annotation_GCF_000210475/GCF_000210475.tsv",
-#              "/storage/data1/marmi/annotation_project/rebuilding_data_test/bakta_annotation_GCF_002853715/GCF_002853715.tsv",
-#              "/storage/data1/marmi/annotation_project/rebuilding_data_test/bakta_annotation_GCF_003018455/GCF_003018455.tsv",
-#              "/storage/data1/marmi/annotation_project/rebuilding_data_test/bakta_annotation_GCF_003697165/GCF_003697165.tsv"]
-
-# make_common_protein_fasta(test_list)

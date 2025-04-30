@@ -1,3 +1,4 @@
+#!/storage/data1/marmi/miniconda/installation/envs/test_env_annotation/bin/python
 import argparse
 import sys
 from main import pipeline_assembly

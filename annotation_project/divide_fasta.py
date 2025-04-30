@@ -19,7 +19,7 @@ def divide_fasta(input_file):
     gene_detected_fasta = prefix + "_detected.faa"
     unknown_fasta = prefix + "_unknown.faa"
 
-    with open(input_file, 'r', newline='') as infile:
+    with open(input_file.replace(".tsv", "_extended.tsv"), 'r', newline='') as infile:
         reader = csv.reader(infile, delimiter='\t')
         for row in reader:
             if row[0].startswith("#"):

@@ -60,7 +60,7 @@ def correcting_gff(input_path):
                                   header=None,
                                   comment='#',
                                   names=['Sequence Id', 'Type', 'Start', 'Stop', 'Strand', 'Locus Tag', 'Gene', 'Product', 'DbXrefs'])
-    extended_tsv_df["Organism"] = ""
+    extended_tsv_df["Organism"] = "Escherichia coli"
     extended_tsv_df.to_csv(bakta_tsv_ext, sep='\t', index=False)
 
     ### known proteins
@@ -83,8 +83,10 @@ def correcting_gff(input_path):
         locus_tag = merged_df.at[i, 'Locus Tag']
         matching_row = joined_uniref_df[joined_uniref_df['id'] == locus_tag]
         if not matching_row.empty:
-            merged_df.at[i, 'Gene'] = matching_row['Gene Names'].values[0]
-            merged_df.at[i, 'Product'] = matching_row['Protein names'].values[0]
+            if str(matching_row['Gene Names'].values[0]) != "":
+                merged_df.at[i, 'Gene'] = matching_row['Gene Names'].values[0]
+            if str(matching_row['Protein names'].values[0]) != "":
+                merged_df.at[i, 'Product'] = matching_row['Protein names'].values[0]
             merged_df.at[i, 'Organism'] = matching_row['Organism'].values[0]
             merged_df.at[i, 'Entry UniProtKB'] = matching_row['Entry'].values[0]
             merged_df.at[i, 'GO'] = matching_row['Gene Ontology (GO)'].values[0]
@@ -115,8 +117,10 @@ def correcting_gff(input_path):
 
             if not matching_row.empty:
 
-                extended_tsv_df.at[i, 'Gene'] = matching_row['Gene Names'].values[0]
-                extended_tsv_df.at[i, 'Product'] = matching_row['Protein names'].values[0]
+                if str(matching_row['Gene Names'].values[0]) != "":
+                    merged_df.at[i, 'Gene'] = matching_row['Gene Names'].values[0]
+                if str(matching_row['Protein names'].values[0]) != "":
+                    merged_df.at[i, 'Product'] = matching_row['Protein names'].values[0]
                 extended_tsv_df.at[i, 'Organism'] = matching_row['Organism'].values[0]
                 extended_tsv_df.at[i, 'Entry UniProtKB'] = matching_row['Entry'].values[0]
                 extended_tsv_df.at[i, 'GO'] = matching_row['Gene Ontology (GO)'].values[0]
