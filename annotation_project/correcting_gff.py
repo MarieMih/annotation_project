@@ -1,9 +1,10 @@
 import os
+import sys
 import shutil
 import re
 import csv
 import pandas as pd
-from finding_missing_entries import finding_missing_entries
+sys.path.append(os.path.dirname(__file__))
 from replace_user_proteins import get_user_protein_information
 
 
@@ -19,6 +20,8 @@ def correcting_gff(input_path):
     #  proteins with known uniref100 references.                         #
     ######################################################################
 
+    bakta_gff = ""
+
     for file in os.listdir(input_path):
         if file.endswith(".gff3"):
             bakta_gff = os.path.abspath(input_path + "/" + file)
@@ -28,7 +31,7 @@ def correcting_gff(input_path):
         print(f'The file {bakta_gff} exists')
     else:
         print(f'The file {bakta_gff} does not exist')
-        exit()
+        sys.exit()
 
     bakta_gff_ext = bakta_gff.rpartition('.')[0] + "_extended.gff3"
     bakta_tsv_ext = bakta_tsv.rpartition('.')[0] + "_extended.tsv"

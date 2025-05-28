@@ -1,5 +1,8 @@
 import os
+import sys
 import asyncio
+import shutil
+sys.path.append(os.path.dirname(__file__))
 from annotation import annotation
 from converting_to_gtf import convert_gff_to_gtf
 from correct_annotation_files import correct_annotation_files
@@ -14,108 +17,6 @@ from make_common_protein_fasta import make_common_protein_fasta
 from metrics.stat import make_stat_file
 
 
-# def pipeline_since_fastq_old(directory):
-#     """"
-#     Full pipeline with filteration, assembling, annotation
-#     and pangenome analysis.
-#     """
-#     files = []
-#     for filename in os.listdir(directory):
-#         if filename.endswith('_1.fq.gz'):
-#             file_path = os.path.join(directory, filename)
-#             files.append(file_path)
-
-#     tsvs = []
-#     target = directory + "/matrix_tsv"
-
-#     for i in files:
-#         name = os.path.split(i)[1].partition('.')[0]
-#         print(i, name)
-#         read_1, read_2 = filtering_fastq_pe(i)
-#         assembly = assembly_unicycler_pe(read_1, read_2)
-#         assembly = os.path.split(i)[0] + "/assembly_" + name + "_sub" + "/assembly.fasta"
-#         bakta_annotation(assembly, name[-24:])
-#         annotation_tsv = os.path.split(i)[0] + "/assembly_" + name + "_sub" + "/bakta_annotation_" + name[-24:] + "/" + name[-24:] + ".tsv"
-#         annotation(annotation_tsv)
-#         annotation_tsv = os.path.split(i)[0] + "/assembly_" + name + "_sub" + "/bakta_annotation_" + name[-24:] + "/" + name[-24:] + "_extended.tsv"
-#         tsvs.append(annotation_tsv)
-
-#     create_directory_with_soft_links(tsvs, target)
-#     print("Start pangenome analysis")
-#     pangenome_analysis(target)
-#     print("Start creating faa")
-#     create_fasta_file(tsvs, directory)
-#     print("Start stat creation")
-#     make_stat_file(target)
-
-#     asyncio.run(send_smth(text=["Ends annotation"]))
-
-
-# def pipeline_assembly_file_old(file):
-#     """
-#     Unfortunately, .fasta files must be in different directories
-#     which lies in the same one as sample.txt.
-#     """
-#     files = []
-#     directory = os.path.split(file)[0]
-#     with open(file, "r") as f:
-#         for i in f:
-#             files.append(i[:-1])
-
-#     tsvs = []
-#     target = directory + "/matrix_tsv"
-
-#     for i in files:
-#         name = os.path.split(i)[1].partition('.')[0]
-#         print(i, name)
-#         bakta_annotation(i, name[-24:])
-#         annotation_tsv = os.path.split(i)[0] + "/bakta_annotation_" + name[-24:] + "/" + name[-24:] + ".tsv"
-#         annotation(annotation_tsv)
-#         annotation_tsv = os.path.split(i)[0] + "/bakta_annotation_" + name[-24:] + "/" + name[-24:] + "_extended.tsv"
-#         tsvs.append(annotation_tsv)
-
-#     create_directory_with_soft_links(tsvs, target)
-#     print("Start pangenome")
-#     pangenome_analysis(target)
-#     print("Start creating faa")
-#     create_fasta_file(tsvs, directory)
-#     print("Start stat creation")
-#     make_stat_file(target)
-
-#     asyncio.run(send_smth(text=["Ends annotation"]))
-
-# def pipeline_assembly(directory):
-#     """
-#     Fortunately, .fasta files could be in one directory.
-#     """
-#     files = []
-#     for filename in os.listdir(directory):
-#         if filename.endswith('.fasta') or filename.endswith('.fa'):
-#             file_path = os.path.join(directory, filename)
-#             files.append(file_path)
-
-#     tsvs = []
-#     target = directory + "/matrix_tsv"
-
-#     for i in files:
-#         name = os.path.split(i)[1].partition('.')[0]
-#         print(i, name)
-#         bakta_annotation(i, name[-24:])
-#         annotation_tsv = os.path.split(i)[0] + "/bakta_annotation_" + name[-24:] + "/" + name[-24:] + ".tsv"
-#         annotation(annotation_tsv)
-#         annotation_tsv = os.path.split(i)[0] + "/bakta_annotation_" + name[-24:] + "/" + name[-24:] + "_extended.tsv"
-#         tsvs.append(annotation_tsv)
-
-#     create_directory_with_soft_links(tsvs, target)
-#     print("Start pangenome")
-#     pangenome_analysis(target)
-#     print("Start creating faa")
-#     create_fasta_file(tsvs, directory)
-#     print("Start stat creation")
-#     make_stat_file(target)
-#     asyncio.run(send_smth(text=["Ends annotation"]))
-
-
 def pipeline_since_fastq(directory):
     """"
     Full pipeline with filteration, assembling, annotation
@@ -128,7 +29,7 @@ def pipeline_since_fastq(directory):
             files.append(file_path)
 
     tsvs = []
-    target = directory + "/matrix_tsv"
+    path_for_tsvs = directory + "/matrix_tsv"
 
     for i in files:
         name = os.path.split(i)[1].partition('.')[0]
@@ -139,8 +40,12 @@ def pipeline_since_fastq(directory):
         bakta_annotation(assembly, name[-24:])
         annotation_tsv = os.path.split(i)[0] + "/assembly_" + name + "_sub" + "/bakta_annotation_" + name[-24:] + "/" + name[-24:] + ".tsv"
         annotation(annotation_tsv)
-        annotation_tsv = os.path.split(i)[0] + "/assembly_" + name + "_sub" + "/bakta_annotation_" + name[-24:] + "/" + name[-24:] + "_extended.tsv"
+        annotation_tsv = os.path.split(i)[0] + "/bakta_annotation_" + name[-24:] + "/" + name[-24:] + "_extended.tsv"
         tsvs.append(annotation_tsv)
+
+        shutil.copytree(os.path.split(i)[0] + "/assembly_" + name + "_sub" + "/bakta_annotation_" + name[-24:],
+                        os.path.split(i)[0] + "/bakta_annotation_" + name[-24:])
+        shutil.rmtree(os.path.split(i)[0] + "/assembly_" + name + "_sub" + "/bakta_annotation_" + name[-24:])
 
     make_common_protein_fasta(tsvs)
     correct_annotation_files(tsvs)
@@ -175,7 +80,7 @@ def pipeline_assembly_file(file):
             files.append(i[:-1])
 
     tsvs = []
-    target = directory + "/matrix_tsv"
+    path_for_tsvs = directory + "/matrix_tsv"
 
     for i in files:
         name = os.path.split(i)[1].partition('.')[0]
@@ -183,8 +88,12 @@ def pipeline_assembly_file(file):
         bakta_annotation(i, name[-24:])
         annotation_tsv = os.path.split(i)[0] + "/bakta_annotation_" + name[-24:] + "/" + name[-24:] + ".tsv"
         annotation(annotation_tsv)
-        annotation_tsv = os.path.split(i)[0] + "/bakta_annotation_" + name[-24:] + "/" + name[-24:] + "_extended.tsv"
+        annotation_tsv = directory + "/bakta_annotation_" + name[-24:] + "/" + name[-24:] + "_extended.tsv"
         tsvs.append(annotation_tsv)
+
+        shutil.copytree(os.path.split(i)[0] + "/bakta_annotation_" + name[-24:],
+                        directory + "/bakta_annotation_" + name[-24:])
+        shutil.rmtree(os.path.split(i)[0] + "/bakta_annotation_" + name[-24:])
 
     make_common_protein_fasta(tsvs)
     correct_annotation_files(tsvs)
@@ -261,11 +170,11 @@ def polishing_annotation_for_cohort(directory):
         name = os.path.split(i)[1]
         name = name.replace("_sub", "").replace("assembly_", "")
         print(i, name)
-        if os.path.exists(os.path.split(i)[0] + "/bakta_annotation"):
-            os.rename(os.path.split(i)[0] + "/bakta_annotation", os.path.split(i)[0] + "/bakta_annotation_" + name[-24:])
-        annotation_tsv = os.path.split(i)[0] + "/bakta_annotation_" + name[-24:] + "/" + name[-24:] + ".tsv"
+        if os.path.exists(i + "/bakta_annotation"):
+            os.rename(i + "/bakta_annotation", i + "/bakta_annotation_" + name[-24:])
+        annotation_tsv = i + "/bakta_annotation_" + name[-24:] + "/" + name[-24:] + ".tsv"
         annotation(annotation_tsv)
-        annotation_tsv = os.path.split(i)[0] + "/bakta_annotation_" + name[-24:] + "/" + name[-24:] + "_extended.tsv"
+        annotation_tsv = i + "/bakta_annotation_" + name[-24:] + "/" + name[-24:] + "_extended.tsv"
         tsvs.append(annotation_tsv)
 
     create_directory_with_soft_links(tsvs, target)
@@ -319,8 +228,6 @@ def polishing_annotation(directory):
     asyncio.run(send_smth(text=["Ends annotation"]))
 
 
-# polishing_annotation("/storage/data1/marmi/assembly_project/ecoli_crohn_isolates_annotation")
-
 def pipeline_assembly(directory):
     """
     Annotate all .fasta or .fa assemblies in input directory.
@@ -372,6 +279,3 @@ def pipeline_assembly(directory):
     make_stat_file(path_for_tsvs)
 
     asyncio.run(send_smth(text=["Ends annotation"]))
-
-
-# pipeline_assembly("/storage/data1/marmi/assembly_project/ecoli_crohn_isolates_annotation/assemblies/annotation_of_plasmid")

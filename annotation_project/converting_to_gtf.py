@@ -57,11 +57,3 @@ def convert_gff_to_gtf(file):
 
     os.remove(new_gtf)
     os.rename(output_gtf, new_gtf)
-
-
-# # integration test
-# try:
-#     os.remove("/storage/data1/marmi/annotation_project/test/integration/ZV_glu_ho_extended.gtf")
-# except:
-#     print("gtf existed.")
-# convert_gff_to_gtf("/storage/data1/marmi/annotation_project/test/integration/ZV_glu_ho_extended.gff3")

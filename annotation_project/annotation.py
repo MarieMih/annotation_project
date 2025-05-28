@@ -6,6 +6,7 @@ import sys
 import subprocess
 import logging
 import os
+sys.path.append(os.path.dirname(__file__))
 from divide_tsv import divide_tsv
 from divide_fasta import divide_fasta
 from extract_uniref import extract_uniref
@@ -19,9 +20,8 @@ UPIMAPI_RESOURCES = "/storage/data1/marmi/upimapi_databases"
 
 def annotation(start_file):
     """
-    Modification of Bakta output.
+    Modification of Bakta output. Get V350045701_L04_26_1.tsv
     """
-    # gets tsv file!!
 
     log = logging.getLogger('ANNOTATION')
 
@@ -91,9 +91,3 @@ def annotation(start_file):
         log.error('divide fasta error!', exc_info=True)
         sys.exit('ERROR: divide fasta failed!')
 ###### begin - block of creating fasta files for process
-
-    # try:
-    #     convert_gff_to_gtf(file_annotation_gff)
-    # except:
-    #     log.error('converting gff error!', exc_info=True)
-    #     sys.exit('ERROR: converting failed!')

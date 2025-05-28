@@ -35,14 +35,3 @@ def create_fasta_file(tsvs, directory):
                 ids.add(row[10])
     ids.remove("")
     get_from_upimapi(ids, directory)
-
-# example
-
-# create_fasta_file(["/storage/data1/marmi/annotation_project/fidelity_dataset/matrix_tsv/25_extended.tsv", "/storage/data1/marmi/annotation_project/fidelity_dataset/matrix_tsv/26_extended.tsv", "/storage/data1/marmi/annotation_project/fidelity_dataset/matrix_tsv/28_extended.tsv", "/storage/data1/marmi/annotation_project/fidelity_dataset/matrix_tsv/29_extended.tsv"], "/storage/data1/marmi/annotation_project/fidelity_dataset/matrix_tsv")
-# create_fasta_file(["/storage/data1/marmi/assembly_project/processed_genome_assemblies/annotation/common_protein_fasta/1655_Glu_clone_1_hn_bold_extended.tsv",
-#                    "/storage/data1/marmi/assembly_project/processed_genome_assemblies/annotation/common_protein_fasta/Mg1655_PA_clone_1_pn_extended.tsv",
-#                    "/storage/data1/marmi/assembly_project/processed_genome_assemblies/annotation/common_protein_fasta/Mg1655_PA_Glu_clone_1_pn_extended.tsv",
-#                    "/storage/data1/marmi/assembly_project/processed_genome_assemblies/annotation/common_protein_fasta/vL2_PA_clone_1_hn_normal_extended.tsv",
-#                    "/storage/data1/marmi/assembly_project/processed_genome_assemblies/annotation/common_protein_fasta/ZvL2_Glu_clone_1_hn_extended.tsv",
-#                    "/storage/data1/marmi/assembly_project/processed_genome_assemblies/annotation/common_protein_fasta/ZvL2_PA_Glu_clone_1_hn_extended.tsv"],
-#                   "/storage/data1/marmi/assembly_project/processed_genome_assemblies/annotation/common_protein_fasta")

@@ -74,79 +74,9 @@ def process_tsv(input_file):
 
     return df
 
-
-def test():
-
-    TEST_LIST = ["/storage/data1/marmi/annotation_project_dev/annotation_project/crohn/long/matrix_tsv/MG_glu_ho_extended.tsv", "/storage/data1/marmi/annotation_project_dev/annotation_project/crohn/long/matrix_tsv/Mg_PA_ln_extended.tsv"]
-
-    df = pd.DataFrame([], columns=COLUMNS)
-    for i in TEST_LIST:
-        df = pd.concat([df, process_tsv(i)])
-
-    test_output = "test_stat_annotation.tsv"
-    df.to_csv(test_output, sep='\t', index=False)
-
-    df = df[df.key == "cds"]
-
-    columns_plot = COLUMNS[2:]
-    sample_names = df['sample_name']
-
-    bar_width = 0.1
-    x = np.arange(len(sample_names))
-    plt.rcParams.update({'font.size': 8})
-    fig, ax = plt.subplots()
-
-    for i, col in enumerate(columns_plot):
-        bars = ax.bar(x + i * bar_width, df[col], width=bar_width, label=col)
-
-        for bar in bars:
-            height = bar.get_height()
-            ax.text(bar.get_x() + bar.get_width() / 2, height, f'{height}', ha='center', va='bottom')
-
-    ax.set_xlabel('Sample Names')
-    ax.set_ylabel('Gene Count')
-    ax.set_title('Gene Count')
-    ax.set_xticks(x + bar_width)
-    ax.set_xticklabels(sample_names)
-    ax.set_yscale('log')
-    # plt.xticks(rotation=20, ha='right')
-    plt.tight_layout(rect=[0, 0, 0.85, 1])
-    ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-
-    plt.savefig("test.png", format="png", bbox_inches='tight')
-
-
-def test2():
-
-    TEST_LIST = ["/storage/data1/marmi/annotation_project_dev/annotation_project/crohn/long/matrix_tsv/MG_glu_ho_extended.tsv", "/storage/data1/marmi/annotation_project_dev/annotation_project/crohn/long/matrix_tsv/Mg_PA_ln_extended.tsv"]
-
-    df = pd.DataFrame([], columns=COLUMNS)
-    for i in TEST_LIST:
-        df = pd.concat([df, process_tsv(i)])
-
-    test_output = "test_stat_annotation.tsv"
-    df.to_csv(test_output, sep='\t', index=False)
-
-    df = df[df.key == "cds"]
-    df = df.drop("key", axis=1)
-
-    df.set_index('sample_name', inplace=True)
-    df = df.apply(pd.to_numeric, errors='coerce')
-
-    plt.figure(figsize=(8, 6))
-    sns.heatmap(df, annot=True, fmt="g", cmap="viridis", cbar_kws={'label': 'Gene Count'}, linewidths=0.5)
-
-    plt.title('Gene Count Heatmap')
-    plt.xlabel('Gene Type')
-    plt.ylabel('Sample Names')
-    plt.xticks(rotation=20, ha='right')
-    plt.tight_layout()
-
-    plt.savefig('heatmap_gene_count.png', bbox_inches='tight')
-
-
 def make_stat_file(directory, filename=None):
     files = []
+
     for curfile in os.listdir(directory):
         if curfile.endswith('.tsv') and not curfile.startswith('stat_annotation'):
             file_path = os.path.join(directory, curfile)
@@ -178,8 +108,3 @@ def make_stat_file(directory, filename=None):
     plt.tight_layout()
 
     plt.savefig(os.path.join(directory, "stat_annotation.png"), bbox_inches='tight')
-
-
-# if __name__ == "__main__":
-#     TEST = "/storage/data1/marmi/annotation_project_dev/annotation_project/crohn/long/matrix_tsv_entry"
-#     make_stat_file(TEST)
