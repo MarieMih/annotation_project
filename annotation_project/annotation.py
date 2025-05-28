@@ -6,7 +6,9 @@ import sys
 import subprocess
 import logging
 import os
+sys.path.append(os.path.dirname(__file__))
 from divide_tsv import divide_tsv
+from divide_fasta import divide_fasta
 from extract_uniref import extract_uniref
 from ref2kb import converting_uniref_to_uniprotkb
 from catch_ids import catch_ids
@@ -18,9 +20,8 @@ UPIMAPI_RESOURCES = "/storage/data1/marmi/upimapi_databases"
 
 def annotation(start_file):
     """
-    Modification of Bakta output.
+    Modification of Bakta output. Get V350045701_L04_26_1.tsv
     """
-    # gets tsv file!!
 
     log = logging.getLogger('ANNOTATION')
 
@@ -28,8 +29,6 @@ def annotation(start_file):
     uniref100_data = pref + '_uniref100.tsv'
     uniref100_upimapi_search_input_file = pref + '_uniref100_uniref100_ids.csv'
     uniref100_upimapi_search_output_directory = pref + '_upimapi_ref2ref'
-    kb_representative_data = uniref100_upimapi_search_output_directory + '/uniprotinfo.tsv'
-    kb_upimapi_input_file = uniref100_upimapi_search_output_directory + '/uniprotinfo_uniref_representative_ids.csv'
     kb_upimapi_output_directory = uniref100_upimapi_search_output_directory + '/uniprotkb'
     kb_tsv = pref + '_cds_sorf.tsv'
     kb_faa = pref + ".faa"
@@ -56,24 +55,16 @@ def annotation(start_file):
         log.error('extract_uniref error!', exc_info=True)
         sys.exit('ERROR: extract_uniref failed!')
 
-    result_upimapi_ref2ref = subprocess.run(['upimapi',
-                                             '-i', uniref100_upimapi_search_input_file,
-                                             '-o', uniref100_upimapi_search_output_directory,
-                                             '--from-db', 'UniRef100',
-                                             '--to-db', 'UniRef100'],
-                                            check=True)
-
-    try:
-        converting_uniref_to_uniprotkb(kb_representative_data)
-    except:
-        log.error('error while coverting ids!', exc_info=True)
-        sys.exit('ERROR: converting_uniref_to_uniprotkb failed!')
+    if not os.path.exists(kb_upimapi_output_directory):
+        os.makedirs(kb_upimapi_output_directory)
 
     result_upimapi_ref2kb = subprocess.run(['upimapi',
-                                            '-i', kb_upimapi_input_file,
+                                            '-i', uniref100_upimapi_search_input_file,
                                             '-o', kb_upimapi_output_directory,
                                             '--from-db', 'UniProtKB AC/ID',
-                                            '--to-db', 'UniProtKB'],
+                                            '--to-db', 'UniProtKB',
+                                            '-rd', "/storage/data1/marmi/upimapi_databases",
+                                            '-t', '1'],
                                            check=True)
 ###### end - block for records with UniRef100 and without UserProtein
 
@@ -85,15 +76,18 @@ def annotation(start_file):
 #         sys.exit('ERROR: catch_ids failed!')
 # ######## end - block for records without UniRef100 and without UserProtein
 
+######## begin - block creating gff
     try:
         file_annotation_gff = correcting_gff(file_for_converting)
     except:
         log.error('correcting gff error!', exc_info=True)
         sys.exit('ERROR: correcting_gff failed!')
+######## end - block creating gff
 
-
+###### begin - block of creating fasta files for process
     try:
-        convert_gff_to_gtf(file_annotation_gff)
+        divide_fasta_res = divide_fasta(start_file)
     except:
-        log.error('converting gff error!', exc_info=True)
-        sys.exit('ERROR: converting failed!')
+        log.error('divide fasta error!', exc_info=True)
+        sys.exit('ERROR: divide fasta failed!')
+###### begin - block of creating fasta files for process

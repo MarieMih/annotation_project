@@ -1,3 +1,4 @@
+#!/storage/data1/marmi/miniconda/installation/envs/test_env_annotation/bin/python
 import argparse
 import sys
 from main import pipeline_assembly
@@ -38,6 +39,7 @@ def create_parser():
         prog = "python {}".format(prog)
     else:
         prog = None
+
     parser = argparse.ArgumentParser(prog=prog,
                                      description='Launch annotation')
 
@@ -81,9 +83,8 @@ def main():
     args = parser.parse_args()
     if "func" in args:
         args.func(args)
-    else:
-        parser.print_help()
-    return 0
+    # else:
+    #     parser.print_help()
 
 
 if __name__ == '__main__':

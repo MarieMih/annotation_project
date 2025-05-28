@@ -30,6 +30,9 @@ def extract_uniref(input_file):
                 if uniref100_ids:
                     for uniref100_id in uniref100_ids:
                         uniref100_id = uniref100_id.split('UniRef:')[1]
+                        uniref100_id = uniref100_id.replace("UniRef100_", "")
+                        if uniref100_id.startswith("UPI"):
+                            continue
                         extracted_data.append([locus_tag_column, uniref100_id])
                         uniref100_list.append(uniref100_id)
 

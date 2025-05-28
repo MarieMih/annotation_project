@@ -16,7 +16,8 @@ def get_from_upimapi(id_set, directory):
                     "-i", "tmp_ids.csv",
                     "-o", directory + "/upimapi_output",
                     "--fasta",
-                    "--from-db", "UniProtKB AC/ID"],
+                    "--from-db", "UniProtKB AC/ID",
+                    "-t", '1'],
                    check=True)
     os.remove("tmp_ids.csv")
 
@@ -31,10 +32,6 @@ def create_fasta_file(tsvs, directory):
             reader = csv.reader(f, delimiter='\t')
             next(reader)
             for row in reader:
-                ids.add(row[15])
+                ids.add(row[10])
     ids.remove("")
     get_from_upimapi(ids, directory)
-
-# example
-
-# create_fasta_file(["/storage/data1/marmi/annotation_project/fidelity_dataset/matrix_tsv/25_extended.tsv", "/storage/data1/marmi/annotation_project/fidelity_dataset/matrix_tsv/26_extended.tsv", "/storage/data1/marmi/annotation_project/fidelity_dataset/matrix_tsv/28_extended.tsv", "/storage/data1/marmi/annotation_project/fidelity_dataset/matrix_tsv/29_extended.tsv"], "/storage/data1/marmi/annotation_project/fidelity_dataset/matrix_tsv")
