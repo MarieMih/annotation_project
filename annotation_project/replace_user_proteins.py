@@ -51,7 +51,3 @@ def get_user_protein_information(tsv):
     df = df.drop(columns=['UserProtein'])
 
     return df
-
-
-# df = get_user_protein_information("GCF_000005845.tsv")
-# print(df)

@@ -55,7 +55,3 @@ def divide_fasta(input_file):
         SeqIO.write(unknown_records, output_handle, "fasta")
 
     print("Protein fasta parsed.")
-
-
-# integration test
-# divide_fasta("/storage/data1/marmi/annotation_project/bakta_example/bakta_annotation_debug_27012025/ZV_glu_ho.tsv")

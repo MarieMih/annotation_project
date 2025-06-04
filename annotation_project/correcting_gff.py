@@ -97,6 +97,8 @@ def correcting_gff(input_path):
             merged_df.at[i, 'UniPathway'] = matching_row['UniPathway'].values[0]
             merged_df.at[i, 'Pathway'] = matching_row['Pathway'].values[0]
             merged_df.at[i, 'Keywords'] = matching_row['Keywords'].values[0]
+        else:
+            merged_df.at[i, 'Gene'] = ""
 
     extended_tsv_df["Gene"] = merged_df["Gene"]
     extended_tsv_df["Product"] = merged_df["Product"]
