@@ -5,9 +5,8 @@ import sys
 import subprocess
 from telegram_send import send
 sys.path.append(os.path.dirname(__file__))
-from common_variables import BAKTA_DB
-from common_variables import PROTEINS
-from common_variables import N_THREADS
+import common_variables
+
 
 async def send_smth(text=None, image=None, file=None):
     """
@@ -69,7 +68,7 @@ def filtering_fastq_pe(fastq,
     pref = fastq.rpartition('.')[0]
     f = open(pref + "_fastp.log", "w", encoding="utf-8")
     try:
-        subprocess.run(['fastp', '-e', str(avg_qual), '-w', N_THREADS,
+        subprocess.run(['fastp', '-e', str(avg_qual), '-w', common_variables.N_THREADS,
                         '--length_required', str(length_required),
                         '--in1', fastq_1_in, '--in2', fastq_2_in,
                         '--out1', fastq_1_out, '--out2', fastq_2_out,
@@ -122,7 +121,7 @@ def filtering_fastq_se(fastq,
     pref = fastq.rpartition('.')[0]
     f = open(pref + "_fastp.log", "w", encoding="utf-8")
     try:
-        subprocess.run(['fastp', '-e', str(avg_qual), '-w', N_THREADS,
+        subprocess.run(['fastp', '-e', str(avg_qual), '-w', common_variables.N_THREADS,
                         '--length_required', str(length_required),
                         '--in1', fastq_in, '--out1', fastq_out,
                         '-j', pref + "_fastp.json",
@@ -163,7 +162,7 @@ def assembly_unicycler_pe(fastq_1, fastq_2):
         subprocess.run(['unicycler',
                         '-1', fastq_1, '-2', fastq_2,
                         '-o', pth,
-                        '--threads', N_THREADS
+                        '--threads', common_variables.N_THREADS
                         ], check=True)
     except Exception as e:
         print(e, "\n", "Error with unicycler.")
@@ -176,18 +175,19 @@ def bakta_annotation(fasta, locus_tag):
     """
     Annotation of bacterial assembly.
     """
+    print(common_variables.BAKTA_DB)
     parts = os.path.split(fasta)
     pth = os.path.join(parts[0], "bakta_annotation_" + locus_tag)
     f = open(os.path.join(parts[0], "bakta_annotation_" + locus_tag + ".log"), "w", encoding="utf-8")
     try:
         subprocess.run(['bakta',
-                        '--db', BAKTA_DB,
-                        '--proteins', PROTEINS,
+                        '--db', common_variables.BAKTA_DB,
+                        '--proteins', common_variables.PROTEINS,
                         '--force',
                         '--skip-plot',
                         '--locus-tag', locus_tag,
                         '--prefix', locus_tag,
-                        '--threads', N_THREADS,
+                        '--threads', common_variables.N_THREADS,
                         '--output', pth,
                         fasta
                         ], check=True, stdout=f)

@@ -14,8 +14,7 @@ from ref2kb import converting_uniref_to_uniprotkb
 from catch_ids import catch_ids
 from correcting_gff import correcting_gff
 from converting_to_gtf import convert_gff_to_gtf
-
-UPIMAPI_RESOURCES = "/storage/data1/marmi/upimapi_databases"
+import common_variables
 
 
 def annotation(start_file):
@@ -63,7 +62,7 @@ def annotation(start_file):
                                             '-o', kb_upimapi_output_directory,
                                             '--from-db', 'UniProtKB AC/ID',
                                             '--to-db', 'UniProtKB',
-                                            '-rd', "/storage/data1/marmi/upimapi_databases",
+                                            '-rd', common_variables.UPIMAPI_RESOURCES,
                                             '-t', '1'],
                                            check=True)
 ###### end - block for records with UniRef100 and without UserProtein

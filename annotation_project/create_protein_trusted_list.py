@@ -42,6 +42,22 @@ def generate_url(taxids: list):
     else:
         return None
 
+def generate_url_trembl(taxids: list):
+    prefix_url = 'https://rest.uniprot.org/uniprotkb/search?compressed=true&format=fasta&query=('
+    postfix_url = '+AND+(reviewed%3Afalse))&size=500'
+    ref_taxids = ["(taxonomy_id%3A" + str(t) + ")" for t in taxids]
+    if len(ref_taxids) > 1:
+        tax_str = "+OR+".join(ref_taxids)
+        tax_str = "(" + tax_str + ")"
+        return prefix_url + tax_str + postfix_url
+    elif len(ref_taxids) == 1:
+        return prefix_url + ref_taxids[0] + postfix_url
+    else:
+        return None
+
+def check_taxids(taxids: list):
+    return True
+
 def correct_short_headers_for_bakta(input_file, output_file, long_format = False, min_identity = str(90), min_query_cov = str(80), min_subject_cov = str(80)):
 
     DBNAME = "UniProtKB"
@@ -72,6 +88,34 @@ def correct_short_headers_for_bakta(input_file, output_file, long_format = False
                     w.write(header_str)
                 else:
                     w.write(line_file)
+
+def create_trembl_db(PROTEIN_DB_FOLDER_USER = "/storage/data1/marmi/annotation_project/protein_db", tax = ['562']):
+
+    PROTEIN_DB_FOLDER = os.path.join(PROTEIN_DB_FOLDER_USER, "upimapi_trembl_taxid")
+    url = generate_url_trembl(tax)
+
+    DB_FILE = os.path.join(PROTEIN_DB_FOLDER, 'uniprot_sequences_' + "_".join(tax) + '_trembl.fasta.gz')
+    os.makedirs(PROTEIN_DB_FOLDER)
+
+    with open(DB_FILE, 'ab') as f:
+        progress_bar = None
+        for response, total in get_batch(url):
+            f.write(response.content)
+            if progress_bar is None:
+                if total.isdigit():
+                    progress_bar = tqdm(total=int(total), desc="Downloading", unit=" entry")
+                else:
+                    progress_bar = tqdm(desc="Downloading", unit=" entry")
+            progress_bar.update(500)
+        if progress_bar:
+            progress_bar.close()
+
+    with open(DB_FILE[:-3], 'wb') as f_out:
+        with gzip.open(DB_FILE, 'rb') as f_in:
+            shutil.copyfileobj(f_in, f_out)
+
+    if os.path.exists(DB_FILE):
+        os.remove(DB_FILE)
 
 def create_protein_db(PROTEIN_DB_FOLDER_USER = "/storage/data1/marmi/annotation_project/protein_db", tax = ['562']):
 
