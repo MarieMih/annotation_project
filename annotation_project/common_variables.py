@@ -16,3 +16,4 @@ PROTEINS = None
 N_THREADS = str(int(os.cpu_count() * 0.75 if (os.cpu_count() is not None) else 1))
 
 SEND_NOTIFICATION = None
+

@@ -56,7 +56,7 @@ def create_parser():
     parser_assembly.add_argument("--bakta-db", metavar="BAKTA_DB")
     parser_assembly.add_argument("--upimapi-db", metavar="UPIMAPI_DB")
     parser_assembly.add_argument("--user-db", metavar="USER_DB")
-    parser_assembly.add_argument("--send-tg", metavar="SEND_TELEGRAM", action=argparse.BooleanOptionalAction)
+    parser_assembly.add_argument("--send-tg", help="telegram messages", action="store_true")
     parser_assembly.add_argument("-t", "--threads", metavar="THREADS")
     parser_assembly.set_defaults(func=launch_pipeline_assembly)
 
@@ -65,7 +65,7 @@ def create_parser():
     parser_assembly_file.add_argument("--bakta-db", metavar="BAKTA_DB")
     parser_assembly_file.add_argument("--upimapi-db", metavar="UPIMAPI_DB")
     parser_assembly_file.add_argument("--user-db", metavar="USER_DB")
-    parser_assembly_file.add_argument("--send-tg", metavar="SEND_TELEGRAM", action=argparse.BooleanOptionalAction)
+    parser_assembly_file.add_argument("--send-tg", help="telegram messages", action="store_true")
     parser_assembly_file.add_argument("-t", "--threads", metavar="THREADS")
     parser_assembly_file.set_defaults(func=launch_pipeline_assembly_file)
 
@@ -74,14 +74,14 @@ def create_parser():
     parser_fastq.add_argument("--bakta-db", metavar="BAKTA_DB")
     parser_fastq.add_argument("--upimapi-db", metavar="UPIMAPI_DB")
     parser_fastq.add_argument("--user-db", metavar="USER_DB")
-    parser_fastq.add_argument("--send-tg", metavar="SEND_TELEGRAM", action=argparse.BooleanOptionalAction)
+    parser_fastq.add_argument("--send-tg", help="telegram messages", action="store_true")
     parser_fastq.add_argument("-t", "--threads", metavar="THREADS")
     parser_fastq.set_defaults(func=launch_pipeline_fastq)
 
     parser_polish = subparsers.add_parser("polish", help="polish bakta annotation in directory")
     parser_polish.add_argument("-d", "--directory", metavar="DIRECTORY")
     parser_polish.add_argument("--upimapi-db", metavar="UPIMAPI_DB")
-    parser_polish.add_argument("--send-tg", metavar="SEND_TELEGRAM", action=argparse.BooleanOptionalAction)
+    parser_polish.add_argument("--send-tg", help="telegram messages", action="store_true")
     parser_polish.add_argument("-t", "--threads", metavar="THREADS")
     parser_polish.set_defaults(func=launch_annotation_polishing)
 
@@ -106,11 +106,11 @@ def main():
     parser = create_parser()
     args = parser.parse_args()
     if "func" in args:
-        common_variables.BAKTA_DB = args.bakta_db if (hasattr(args, "bakta_db") and args.bakta_db != "") else "/storage/data1/marmi/bakta_db_latest/db"
-        common_variables.PROTEINS = args.user_db if (hasattr(args, "user_db") and args.user_db != "") else os.path.split(os.path.split(os.path.realpath(sys.argv[0]))[0])[0] + "/protein_db/uniprot_faa/uniq_sp562_rep_seq.fasta"
+        common_variables.BAKTA_DB = args.bakta_db if (hasattr(args, "bakta_db") and (args.bakta_db != "") and (args.bakta_db is not None)) else "/storage/data1/marmi/bakta_db_latest/db"
+        common_variables.PROTEINS = args.user_db if (hasattr(args, "user_db") and (args.user_db != "") and (args.user_db is not None)) else os.path.split(os.path.split(os.path.realpath(sys.argv[0]))[0])[0] + "/protein_db/uniprot_faa/uniq_sp562_rep_seq.fasta"
         common_variables.N_THREADS = args.threads if (hasattr(args, "threads") and (args.threads is not None)) else str(int(os.cpu_count() * 0.75 if (os.cpu_count() is not None) else 1))
-        common_variables.UPIMAPI_RESOURCES = args.upimapi_db if (hasattr(args, "upimapi_db") and args.upimapi_db != "") else "/storage/data1/marmi/upimapi_databases"
-        common_variables.SEND_NOTIFICATION = True if hasattr(args, "send_tg") else False
+        common_variables.UPIMAPI_RESOURCES = args.upimapi_db if (hasattr(args, "upimapi_db") and (args.upimapi_db != "") and (args.upimapi_db is not None)) else "/storage/data1/marmi/upimapi_databases"
+        common_variables.SEND_NOTIFICATION = args.send_tg if hasattr(args, "send_tg") else False
         args.func(args)
     # else:
     #     parser.print_help()

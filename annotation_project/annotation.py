@@ -56,7 +56,7 @@ def annotation(start_file):
 
     if not os.path.exists(kb_upimapi_output_directory):
         os.makedirs(kb_upimapi_output_directory)
-
+    
     result_upimapi_ref2kb = subprocess.run(['upimapi',
                                             '-i', uniref100_upimapi_search_input_file,
                                             '-o', kb_upimapi_output_directory,
