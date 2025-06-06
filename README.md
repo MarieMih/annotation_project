@@ -22,9 +22,8 @@ New annotation tool.
 
 ## Installation
 
-    conda env create -f environment.yml
     git clone https://github.com/MarieMih/annotation_project.git
-    python cli.py --help
+    conda env create -f environment.yml
 
 ## Usage
 
