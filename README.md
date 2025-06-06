@@ -1,4 +1,4 @@
-![Colinca](https://github.com/MarieMih/annotation_project/other/colinca.png)
+![Colinca](https://github.com/MarieMih/annotation_project/blob/rebase/other/colinca.png)
 
 
 
