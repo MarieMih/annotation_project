@@ -5,6 +5,7 @@ import shutil
 import subprocess
 sys.path.append(os.path.dirname(__file__))
 from annotation import annotation
+import common_variables
 from converting_to_gtf import convert_gff_to_gtf
 from correct_annotation_files import correct_annotation_files
 from create_union_protein_fasta_from_gffs import create_fasta_file
@@ -74,6 +75,7 @@ def pipeline_setting():
             subprocess.run(['telegram-send', '-c'],
                         check=True)
 
+
 def pipeline_since_fastq(directory):
     """"
     Full pipeline with filteration, assembling, annotation
@@ -122,7 +124,8 @@ def pipeline_since_fastq(directory):
     print("Start stat creation")
     make_stat_file(path_for_tsvs)
 
-    asyncio.run(send_smth(text=["Ends annotation"]))
+    if common_variables.SEND_NOTIFICATION:
+        asyncio.run(send_smth(text=["Ends annotation"]))
 
 
 def pipeline_assembly_file(file):
@@ -170,7 +173,8 @@ def pipeline_assembly_file(file):
     print("Start stat creation")
     make_stat_file(path_for_tsvs)
 
-    asyncio.run(send_smth(text=["Ends annotation"]))
+    if common_variables.SEND_NOTIFICATION:
+        asyncio.run(send_smth(text=["Ends annotation"]))
 
 
 def pipeline_assembly_bakta_only(directory):
@@ -241,7 +245,8 @@ def polishing_annotation_for_cohort(directory):
     create_fasta_file(tsvs, directory)
     print("Start stat creation")
     make_stat_file(target)
-    asyncio.run(send_smth(text=["Ends annotation"]))
+    if common_variables.SEND_NOTIFICATION:
+        asyncio.run(send_smth(text=["Ends annotation"]))
 
 
 def polishing_annotation(directory):
@@ -282,7 +287,8 @@ def polishing_annotation(directory):
     print("Start stat creation")
     make_stat_file(path_for_tsvs)
 
-    asyncio.run(send_smth(text=["Ends annotation"]))
+    if common_variables.SEND_NOTIFICATION:
+        asyncio.run(send_smth(text=["Ends annotation"]))
 
 
 def pipeline_assembly(directory):
@@ -335,4 +341,5 @@ def pipeline_assembly(directory):
     print("Start stat creation")
     make_stat_file(path_for_tsvs)
 
-    asyncio.run(send_smth(text=["Ends annotation"]))
+    if common_variables.SEND_NOTIFICATION:
+        asyncio.run(send_smth(text=["Ends annotation"]))
