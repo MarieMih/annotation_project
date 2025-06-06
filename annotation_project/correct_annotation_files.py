@@ -71,8 +71,8 @@ def correct_annotation_files(tsvs):
                     df.loc[df['Locus Tag'] == locustag, ['Gene_id']] = df.loc[df['Locus Tag'] == locustag, ['Transcript_id']].values[0]
             else:
                 for locustag in cluster_part_df.loc[cluster_part_df["Head"] == head, 'Member']:
-                    df.loc[df['Locus Tag'] == locustag, ['Transcript_id']] = head
-                    df.loc[df['Locus Tag'] == locustag, ['Gene_id']] = head
+                    df.loc[df['Locus Tag'] == locustag, ['Transcript_id']] = "UKW_HP_" + head
+                    df.loc[df['Locus Tag'] == locustag, ['Gene_id']] = "UKW_HP_" + head
                     df.loc[df['Locus Tag'] == locustag, ["Gene"]] = "UKW_HP_" + head
 
         ### writing into new tsv and gff
