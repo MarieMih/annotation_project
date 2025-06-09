@@ -25,6 +25,7 @@ Tool that creates colinear annotations for group of samples of one species.
     cd annotation_project
     conda env create -f environement.yml
     conda activate annotation_project
+    cd annotation_project
 
 ## Usage
 
