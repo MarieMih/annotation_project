@@ -22,8 +22,8 @@ Tool that creates colinear annotations for group of samples of one species.
 ## Installation
 
     git clone -b rebase https://github.com/MarieMih/annotation_project.git
-    conda env create -f environment.yml
     cd annotation_project
+    conda env create -f environment.yml
     conda activate annotation_project
 
 ## Usage
