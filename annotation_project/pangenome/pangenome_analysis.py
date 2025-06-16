@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from random import randint
+import common_variables
 
 
 def create_directory_with_soft_links(tsvs, target_or):
@@ -91,7 +92,7 @@ def pangenome_analysis(directory_or):
     boxplot_data = [core_genome_sizes[i] for i in range(1, len(data.columns) + 1)]
 
     plt.figure(figsize=(10, 6))
-    plt.boxplot(boxplot_data, labels=[str(i) for i in range(1, len(data.columns) + 1)])
+    plt.boxplot(boxplot_data, tick_labels=[str(i) for i in range(1, len(data.columns) + 1)])
     plt.xlabel('Number of Samples')
     plt.ylabel('Core Genome Size')
     plt.title('Core Genome Size Distribution by Number of Samples')
@@ -103,7 +104,7 @@ def pangenome_analysis(directory_or):
     boxplot_data = [pangenome_sizes[i] for i in range(1, len(data.columns) + 1)]
 
     plt.figure(figsize=(10, 6))
-    plt.boxplot(boxplot_data, labels=[str(i) for i in range(1, len(data.columns) + 1)])
+    plt.boxplot(boxplot_data, tick_labels=[str(i) for i in range(1, len(data.columns) + 1)])
     plt.xlabel('Number of Samples')
     plt.ylabel('Pangenome Size')
     plt.title('Pangenome Size Distribution by Number of Samples')
@@ -111,4 +112,5 @@ def pangenome_analysis(directory_or):
     pan_image = directory + "/" + "pan.png"
     plt.savefig(pan_image)
 
-    asyncio.run(send_smth(cor_image, pan_image))
+    if common_variables.SEND_NOTIFICATION:
+        asyncio.run(send_smth(cor_image, pan_image))

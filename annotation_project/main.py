@@ -2,19 +2,78 @@ import os
 import sys
 import asyncio
 import shutil
+import subprocess
 sys.path.append(os.path.dirname(__file__))
 from annotation import annotation
+import common_variables
 from converting_to_gtf import convert_gff_to_gtf
 from correct_annotation_files import correct_annotation_files
 from create_union_protein_fasta_from_gffs import create_fasta_file
-from pangenome.pangenome_analysis import pangenome_analysis
-from pangenome.pangenome_analysis import create_directory_with_soft_links
-from preparation import assembly_unicycler_pe
-from preparation import bakta_annotation
-from preparation import send_smth
-from preparation import filtering_fastq_pe
+from pangenome.pangenome_analysis import pangenome_analysis, create_directory_with_soft_links
+from preparation import assembly_unicycler_pe, bakta_annotation, send_smth, filtering_fastq_pe
 from make_common_protein_fasta import make_common_protein_fasta
 from metrics.stat import make_stat_file
+from create_protein_trusted_list import create_protein_db, check_taxids
+
+
+def pipeline_setting():
+    """
+    Download Bakta, upimapi, userprotein databases.
+    Set telegram-bot if needed.
+    """
+    print("Hello! This is script for set the main databases needed in pipeline.")
+
+    BAKTA_TRUE = ""
+    BAKTA_DB_TYPE = ""
+    BAKTA_DB = ""
+
+    while (BAKTA_TRUE != "y") and (BAKTA_TRUE != "n"):
+        BAKTA_TRUE = input("Do you want to install Bakta DB? (y/n): ")
+
+    if BAKTA_TRUE == "y":
+        while (BAKTA_DB_TYPE != "full") and (BAKTA_DB_TYPE != "light"):
+            BAKTA_DB_TYPE = input("Do you want to install full (~70 Gb) or light (3 Gb) version of Bakta DB? (full/light): ")
+        while not os.path.exists(BAKTA_DB):
+            BAKTA_DB = input("Where do you want to install Bakta DB? ")
+            if not os.path.exists(BAKTA_DB): print("Folder doesn't exists.")
+        subprocess.run(['bakta_db', 'download',
+                        "--output", BAKTA_DB,
+                        "--type", BAKTA_DB_TYPE],
+                        check=True)
+
+    USERPROTEIN_TRUE = ""
+    USERPROTEIN_DB_TAXIDS = ""
+    USERPROTEIN_DB = ""
+
+    while (USERPROTEIN_TRUE != "y") and (USERPROTEIN_TRUE != "n"):
+        USERPROTEIN_TRUE = input("Do you want to create protein-trusted file? (y/n): ")
+
+    if USERPROTEIN_TRUE == "y":
+        while (USERPROTEIN_DB_TAXIDS == ""):
+            USERPROTEIN_DB_TAXIDS = input("What taxids do you want to include? (separate by one space) ")
+            real_taxids = check_taxids(USERPROTEIN_DB_TAXIDS)
+            if real_taxids != True:
+                print(f"Taxids {real_taxids} aren't correct!")
+                USERPROTEIN_DB_TAXIDS = ''
+        while not os.path.exists(USERPROTEIN_DB):
+            USERPROTEIN_DB = input("Where do you want to download UserProtein DB? ")
+            if not os.path.exists(USERPROTEIN_DB): print("Folder doesn't exists.")
+        real_taxids = USERPROTEIN_DB_TAXIDS.strip().split(" ")
+        create_protein_db(USERPROTEIN_DB, real_taxids)
+        print(f"{os.path.join(USERPROTEIN_DB, 'usertaxids_colinca', 'uniprot_sequences_' + '_'.join(real_taxids) + '_rep.fasta')} created!")
+
+    TELEGRAM_BOOL = ""
+    TELEGRAM_NEW = ""
+
+    while (TELEGRAM_BOOL != "y") and (TELEGRAM_BOOL != "n"):
+        TELEGRAM_BOOL = input("Do you want to receive messages in your own telegram-bot? (y/n): ")
+    if TELEGRAM_BOOL == "y":
+        while (TELEGRAM_NEW != "y") and (TELEGRAM_NEW != "n"):
+            TELEGRAM_NEW = input("Do you want to create new telegram-bot (otherwise will be used the one configured now in system)? (y/n): ")
+        if TELEGRAM_NEW == 'y':
+            print("Okey! Let's started")
+            subprocess.run(['telegram-send', '-c'],
+                        check=True)
 
 
 def pipeline_since_fastq(directory):
@@ -65,7 +124,8 @@ def pipeline_since_fastq(directory):
     print("Start stat creation")
     make_stat_file(path_for_tsvs)
 
-    asyncio.run(send_smth(text=["Ends annotation"]))
+    if common_variables.SEND_NOTIFICATION:
+        asyncio.run(send_smth(text=["Ends annotation"]))
 
 
 def pipeline_assembly_file(file):
@@ -113,7 +173,8 @@ def pipeline_assembly_file(file):
     print("Start stat creation")
     make_stat_file(path_for_tsvs)
 
-    asyncio.run(send_smth(text=["Ends annotation"]))
+    if common_variables.SEND_NOTIFICATION:
+        asyncio.run(send_smth(text=["Ends annotation"]))
 
 
 def pipeline_assembly_bakta_only(directory):
@@ -184,7 +245,8 @@ def polishing_annotation_for_cohort(directory):
     create_fasta_file(tsvs, directory)
     print("Start stat creation")
     make_stat_file(target)
-    asyncio.run(send_smth(text=["Ends annotation"]))
+    if common_variables.SEND_NOTIFICATION:
+        asyncio.run(send_smth(text=["Ends annotation"]))
 
 
 def polishing_annotation(directory):
@@ -225,7 +287,8 @@ def polishing_annotation(directory):
     print("Start stat creation")
     make_stat_file(path_for_tsvs)
 
-    asyncio.run(send_smth(text=["Ends annotation"]))
+    if common_variables.SEND_NOTIFICATION:
+        asyncio.run(send_smth(text=["Ends annotation"]))
 
 
 def pipeline_assembly(directory):
@@ -278,4 +341,5 @@ def pipeline_assembly(directory):
     print("Start stat creation")
     make_stat_file(path_for_tsvs)
 
-    asyncio.run(send_smth(text=["Ends annotation"]))
+    if common_variables.SEND_NOTIFICATION:
+        asyncio.run(send_smth(text=["Ends annotation"]))

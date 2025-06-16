@@ -97,6 +97,8 @@ def correcting_gff(input_path):
             merged_df.at[i, 'UniPathway'] = matching_row['UniPathway'].values[0]
             merged_df.at[i, 'Pathway'] = matching_row['Pathway'].values[0]
             merged_df.at[i, 'Keywords'] = matching_row['Keywords'].values[0]
+        else:
+            merged_df.at[i, 'Gene'] = ""
 
     extended_tsv_df["Gene"] = merged_df["Gene"]
     extended_tsv_df["Product"] = merged_df["Product"]
@@ -121,9 +123,9 @@ def correcting_gff(input_path):
             if not matching_row.empty:
 
                 if str(matching_row['Gene Names'].values[0]) != "":
-                    merged_df.at[i, 'Gene'] = matching_row['Gene Names'].values[0]
+                    extended_tsv_df.at[i, 'Gene'] = matching_row['Gene Names'].values[0]
                 if str(matching_row['Protein names'].values[0]) != "":
-                    merged_df.at[i, 'Product'] = matching_row['Protein names'].values[0]
+                    extended_tsv_df.at[i, 'Product'] = matching_row['Protein names'].values[0]
                 extended_tsv_df.at[i, 'Organism'] = matching_row['Organism'].values[0]
                 extended_tsv_df.at[i, 'Entry UniProtKB'] = matching_row['Entry'].values[0]
                 extended_tsv_df.at[i, 'GO'] = matching_row['Gene Ontology (GO)'].values[0]
@@ -135,10 +137,7 @@ def correcting_gff(input_path):
         print("Userprotein_only file is empty.")
 ####### end - rewrite fields with UserProtein data
 
-# ####### begin - rewrite all the rest records
-#     finding_missing_entries(extended_tsv_df, faa)
-# ####### end - rewrite all the rest records
-
+####### begin - fill empty fields with "", add Transcript_id/Gene_id
     extended_tsv_df["Gene"] = extended_tsv_df["Gene"].fillna('').astype(str)
     extended_tsv_df["Entry UniProtKB"] = extended_tsv_df["Entry UniProtKB"].fillna('').astype(str)
     extended_tsv_df["Transcript_id"] = extended_tsv_df["Type"] + "|" + extended_tsv_df["Gene"].fillna('') + "|" + extended_tsv_df["Entry UniProtKB"].fillna('')
@@ -148,7 +147,9 @@ def correcting_gff(input_path):
            and ((extended_tsv_df.at[i, 'Type'] == "cds") or (extended_tsv_df.at[i, 'Type'] == "sorf"))):
             extended_tsv_df.at[i, 'Transcript_id'] = str(extended_tsv_df.at[i, "Locus Tag"]) + "_" + str(extended_tsv_df.at[i, "Type"])
     extended_tsv_df["Gene_id"] = extended_tsv_df["Transcript_id"]
+####### end - fill empty fields with "", add Transcript_id/Gene_id
 
+####### begin - save to tsv and to gff
     extended_tsv_df.to_csv(bakta_tsv_ext, sep='\t', index=False)
     extended_tsv_df.fillna('', inplace=True)
 
@@ -208,5 +209,6 @@ def correcting_gff(input_path):
                     new_row = row.copy()
                     new_row[8] = new_record
                     w.write('\t'.join(new_row)+"\n")
+####### end - save to tsv and to gff
 
     return bakta_gff_ext
