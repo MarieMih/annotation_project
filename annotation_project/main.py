@@ -40,6 +40,7 @@ def pipeline_setting():
                         "--output", BAKTA_DB,
                         "--type", BAKTA_DB_TYPE],
                         check=True)
+        print(f"Done! Use {os.path.join(os.path.abspath(BAKTA_DB), 'db' if (BAKTA_DB_TYPE == 'full') else 'db-light')} as path in --bakta-db.")
 
     USERPROTEIN_TRUE = ""
     USERPROTEIN_DB_TAXIDS = ""
@@ -61,6 +62,7 @@ def pipeline_setting():
         real_taxids = USERPROTEIN_DB_TAXIDS.strip().split(" ")
         create_protein_db(USERPROTEIN_DB, real_taxids)
         print(f"{os.path.join(USERPROTEIN_DB, 'usertaxids_colinca', 'uniprot_sequences_' + '_'.join(real_taxids) + '_rep.fasta')} created!")
+        print(f"Done! Use {os.path.join(os.path.abspath(USERPROTEIN_DB), 'usertaxids_colinca', 'uniprot_sequences_' + '_'.join(real_taxids) + '_rep.fasta')} as path in --user-db.")
 
     TELEGRAM_BOOL = ""
     TELEGRAM_NEW = ""
