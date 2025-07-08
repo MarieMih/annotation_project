@@ -8,8 +8,6 @@ dependencies:
   - seaborn
   - pandas
   - numpy
-  - fastqc
-  - multiqc
   - mmseqs2
   - fastp
   - rasusa
@@ -17,6 +15,7 @@ dependencies:
   - agat
   - upimapi
   - bakta==1.9.4
+  - python==3.11
   - pip
   - pip:
     - telegram-send
