@@ -61,6 +61,7 @@ def annotation(start_file):
                                             '-o', kb_upimapi_output_directory,
                                             '--from-db', 'UniProtKB AC/ID',
                                             '--to-db', 'UniProtKB',
+                                            '--columns', "Entry&Entry Name&Gene Names&Protein names&EC number&Function [CC]&Pathway&Keywords&Protein existence&Gene Ontology (GO)&Protein families&Taxonomic lineage&Taxonomic lineage (Ids)&Taxonomic lineage IDs (SPECIES)&Taxonomic lineage (SPECIES)&Organism&Organism (ID)&BioCyc&BRENDA&CDD&eggNOG&Ensembl&InterPro&KEGG&Pfam&Reactome&RefSeq&UniPathway",
                                             '-rd', common_variables.UPIMAPI_RESOURCES,
                                             '-t', '1'],
                                            check=True)

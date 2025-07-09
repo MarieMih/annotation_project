@@ -31,6 +31,7 @@ def finding_from_fasta(fasta_file):
                     '-o', upimapi_output,
                     '-t', common_variables.N_THREADS,
                     '-rd', common_variables.UPIMAPI_RESOURCES,
+                    '--columns', "Entry&Entry Name&Gene Names&Protein names&EC number&Function [CC]&Pathway&Keywords&Protein existence&Gene Ontology (GO)&Protein families&Taxonomic lineage&Taxonomic lineage (Ids)&Taxonomic lineage IDs (SPECIES)&Taxonomic lineage (SPECIES)&Organism&Organism (ID)&BioCyc&BRENDA&CDD&eggNOG&Ensembl&InterPro&KEGG&Pfam&Reactome&RefSeq&UniPathway",
                     '-db', common_variables.UPIMAPI_DATABASE
                     ],
                    check=True)
