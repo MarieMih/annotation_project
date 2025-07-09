@@ -40,6 +40,7 @@ def get_user_protein_information(tsv):
 
     subprocess.run(['upimapi', '-i', list_ids,
                     '-o', upimapi_dir,
+                    '--columns', "Entry&Entry Name&Gene Names&Protein names&EC number&Function [CC]&Pathway&Keywords&Protein existence&Gene Ontology (GO)&Protein families&Taxonomic lineage&Taxonomic lineage (Ids)&Taxonomic lineage IDs (SPECIES)&Taxonomic lineage (SPECIES)&Organism&Organism (ID)&BioCyc&BRENDA&CDD&eggNOG&Ensembl&InterPro&KEGG&Pfam&Reactome&RefSeq&UniPathway",
                     '-t', '1'],
                    check=True)
 

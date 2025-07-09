@@ -6,6 +6,7 @@ import csv
 import pandas as pd
 sys.path.append(os.path.dirname(__file__))
 from replace_user_proteins import get_user_protein_information
+from correct_annotation_files import create_acronym
 
 
 def correcting_gff(input_path):
@@ -98,7 +99,8 @@ def correcting_gff(input_path):
             merged_df.at[i, 'Pathway'] = matching_row['Pathway'].values[0]
             merged_df.at[i, 'Keywords'] = matching_row['Keywords'].values[0]
         else:
-            merged_df.at[i, 'Gene'] = ""
+            if (merged_df.at[i, 'Type'] == "cds") or (merged_df.at[i, 'Type'] == "sorf"):
+                merged_df.at[i, 'Gene'] = ""
 
     extended_tsv_df["Gene"] = merged_df["Gene"]
     extended_tsv_df["Product"] = merged_df["Product"]
@@ -122,8 +124,10 @@ def correcting_gff(input_path):
 
             if not matching_row.empty:
 
-                if str(matching_row['Gene Names'].values[0]) != "":
+                if (str(matching_row['Gene Names'].values[0]) != "") and (pd.notna(matching_row['Gene Names'].values[0])):
                     extended_tsv_df.at[i, 'Gene'] = matching_row['Gene Names'].values[0]
+                else:
+                    extended_tsv_df.at[i, 'Gene'] = "EGN_" + create_acronym(matching_row['Protein names'].values[0]) + "_" + locus_tag
                 if str(matching_row['Protein names'].values[0]) != "":
                     extended_tsv_df.at[i, 'Product'] = matching_row['Protein names'].values[0]
                 extended_tsv_df.at[i, 'Organism'] = matching_row['Organism'].values[0]
