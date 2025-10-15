@@ -13,7 +13,7 @@ from pangenome.pangenome_analysis import pangenome_analysis, create_directory_wi
 from preparation import assembly_unicycler_pe, bakta_annotation, send_smth, filtering_fastq_pe
 from make_common_protein_fasta import make_common_protein_fasta
 from metrics.stat import make_stat_file
-from create_protein_trusted_list import create_protein_db, check_taxids
+from create_protein_trusted_list import create_protein_db, create_upimapi_db, check_taxids
 
 
 def pipeline_setting():
@@ -53,7 +53,7 @@ def pipeline_setting():
         while (USERPROTEIN_DB_TAXIDS == ""):
             USERPROTEIN_DB_TAXIDS = input("What taxids do you want to include? (separate by one space) ")
             real_taxids = check_taxids(USERPROTEIN_DB_TAXIDS)
-            if real_taxids != True:
+            if real_taxids is not True:
                 print(f"Taxids {real_taxids} aren't correct!")
                 USERPROTEIN_DB_TAXIDS = ''
         while not os.path.exists(USERPROTEIN_DB):
@@ -63,6 +63,27 @@ def pipeline_setting():
         create_protein_db(USERPROTEIN_DB, real_taxids)
         print(f"{os.path.join(USERPROTEIN_DB, 'usertaxids_colinca', 'uniprot_sequences_' + '_'.join(real_taxids) + '_rep.fasta')} created!")
         print(f"Done! Use {os.path.join(os.path.abspath(USERPROTEIN_DB), 'usertaxids_colinca', 'uniprot_sequences_' + '_'.join(real_taxids) + '_rep.fasta')} as path in --user-db.")
+
+    UPIMAPICUST_TRUE = ""
+    UPIMAPICUST_DB_TAXIDS = ""
+    UPIMAPICUST_DB = ""
+
+    while (UPIMAPICUST_TRUE != "y") and (UPIMAPICUST_TRUE != "n"):
+        UPIMAPICUST_TRUE = input("Do you want to create UPIMAPI database file? (y/n): ")
+
+    if UPIMAPICUST_TRUE == "y":
+        while (UPIMAPICUST_DB_TAXIDS == ""):
+            UPIMAPICUST_DB_TAXIDS = input("What taxids do you want to include? (separate by one space) ")
+            real_taxids = check_taxids(UPIMAPICUST_DB_TAXIDS)
+            if real_taxids is not True:
+                print(f"Taxids {real_taxids} aren't correct!")
+                UPIMAPICUST_DB_TAXIDS = ''
+        while not os.path.exists(UPIMAPICUST_DB):
+            UPIMAPICUST_DB = input("Where do you want to download UPIMAPI DB? ")
+            if not os.path.exists(UPIMAPICUST_DB): print("Folder doesn't exists.")
+        real_taxids = UPIMAPICUST_DB_TAXIDS.strip().split(" ")
+        rvalue = create_upimapi_db(UPIMAPICUST_DB, real_taxids)
+        print(f"Done! Use {os.path.join(os.path.abspath(UPIMAPICUST_DB), 'upimapi_taxids_colinca', 'upimapi_uniprot_trembl_' + '_'.join(real_taxids) + '_rep_seq.fasta')} as path in --user-db.")
 
     TELEGRAM_BOOL = ""
     TELEGRAM_NEW = ""
@@ -94,6 +115,7 @@ def pipeline_since_fastq(directory):
 
     for i in files:
         name = os.path.split(i)[1].partition('.')[0]
+        name = name[:-2]
         print(i, name)
         read_1, read_2 = filtering_fastq_pe(i)
         assembly = assembly_unicycler_pe(read_1, read_2)

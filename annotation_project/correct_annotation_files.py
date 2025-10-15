@@ -42,6 +42,10 @@ def correct_annotation_files(tsvs):
                and (df.at[i, 'Entry UniProtKB'] == "")
                and ((df.at[i, 'Type'] == "cds") or (df.at[i, 'Type'] == "sorf"))):
                 df.at[i, 'Transcript_id'] = str(df.at[i, "Locus Tag"])
+            if ((df.at[i, 'Gene'] == "")
+               and ((df.at[i, 'Type'] != "cds")
+               and (df.at[i, 'Type'] != "sorf"))):
+                df.at[i, 'Transcript_id'] = str(df.at[i, "Product"]).replace(" ", "_")
         df["Gene_id"] = df["Transcript_id"]
 
         ### rewrite tsv with finding information from uniprot
@@ -113,6 +117,9 @@ def correct_annotation_files(tsvs):
                             new_record.append(f"Dbxref={record['DbXrefs']}")
                         if record['Gene']:
                             new_record.append(f"gene={record['Gene']}")
+                        if record['Type']:
+                            new_record.append(f"gene_biotype={record['Type']}")
+                            new_record.append(f"transcript_biotype={record['Type']}")
                         if record['Entry UniProtKB']:
                             new_record.append(f"entry={record['Entry UniProtKB']}")
                         if record['Organism']:
@@ -122,15 +129,15 @@ def correct_annotation_files(tsvs):
                         if record['Gene_id']:
                             new_record.append(f"gene_id={record['Gene_id']}")
                         if record['GO']:
-                            new_record.append(f"go={record['GO']}")
+                            new_record.append(f"go={record['GO'].replace(';', ',')}")
                         if record['KEGG']:
-                            new_record.append(f"kegg={record['KEGG']}")
+                            new_record.append(f"kegg={record['KEGG'].replace(';', ',')}")
                         if record['UniPathway']:
-                            new_record.append(f"unipathway={record['UniPathway']}")
+                            new_record.append(f"unipathway={record['UniPathway'].replace(';', ',')}")
                         if record['Pathway']:
-                            new_record.append(f"pathway={record['Pathway']}")
+                            new_record.append(f"pathway={record['Pathway'].replace(';', ',')}")
                         if record['Keywords']:
-                            new_record.append(f"keywords={record['Keywords']}")
+                            new_record.append(f"keywords={record['Keywords'].replace(';', ',')}")
 
                         new_record = ";".join(new_record)
                         new_row = row.copy()

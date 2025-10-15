@@ -32,6 +32,9 @@ def convert_gff_to_gtf(file):
     col_names = ["seqid", "source", "feature", "start", "end", "score", "strand", "frame", "attributes"]
     gtf_data = pd.read_csv(new_gtf, sep="\t", comment="#", header=None, names=col_names)
 
+    gtf_data = gtf_data.loc[gtf_data['source'] != "AGAT"]
+    gtf_data = gtf_data.loc[~gtf_data['attributes'].str.contains('gene_id "contig_')]
+
     def clean_multiple_quotes(attributes):
         fields = attributes.split(";")
         cleaned_fields = []
@@ -49,6 +52,8 @@ def convert_gff_to_gtf(file):
 
     gtf_data['attributes'] = gtf_data['attributes'].apply(clean_multiple_quotes)
     gtf_data.loc[gtf_data['feature'] == 'CRISPR', 'strand'] = '+'
+
+    gtf_data = pd.concat([pd.DataFrame([row, {**row, "feature": 'transcript'}]) for row in gtf_data.to_dict("records")], ignore_index=True)
 
     output_gtf = new_gtf.replace(".gtf", "_tmp.gtf")
     with open(output_gtf, "w") as file:

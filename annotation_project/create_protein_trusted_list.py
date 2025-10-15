@@ -167,3 +167,53 @@ def create_protein_db(PROTEIN_DB_FOLDER_USER = "/storage/data1/marmi/annotation_
 
     correct_short_headers_for_bakta(os.path.join(PROTEIN_DB_FOLDER, 'uniprot_sequences_' + "_".join(tax) + "_rep_seq.fasta"), os.path.join(PROTEIN_DB_FOLDER, 'uniprot_sequences_' + "_".join(tax) + "_rep.fasta"))
     os.remove(os.path.join(PROTEIN_DB_FOLDER, 'uniprot_sequences_' + "_".join(tax) + "_rep_seq.fasta"))
+
+def create_upimapi_db(UPIMAPI_DB_FOLDER_USER = "/storage/data1/marmi/annotation_project/protein_db", tax = ['562']):
+
+    UPIMAPI_DB_FOLDER = os.path.join(UPIMAPI_DB_FOLDER_USER, "upimapi_taxids_colinca")
+    url = generate_url_trembl(tax)
+
+    DB_FILE = os.path.join(UPIMAPI_DB_FOLDER, 'upimapi_uniprot_trembl_' + "_".join(tax) + '.fasta.gz')
+    os.makedirs(UPIMAPI_DB_FOLDER)
+
+    with open(DB_FILE, 'ab') as f:
+        progress_bar = None
+        for response, total in get_batch(url):
+            f.write(response.content)
+            if progress_bar is None:
+                if total.isdigit():
+                    progress_bar = tqdm(total=int(total), desc="Downloading", unit=" entry")
+                else:
+                    progress_bar = tqdm(desc="Downloading", unit=" entry")
+            progress_bar.update(500)
+        if progress_bar:
+            progress_bar.close()
+
+    with open(DB_FILE[:-3], 'wb') as f_out:
+        with gzip.open(DB_FILE, 'rb') as f_in:
+            shutil.copyfileobj(f_in, f_out)
+
+    if os.path.exists(DB_FILE):
+        os.remove(DB_FILE)
+
+    ferr = open(os.path.join(UPIMAPI_DB_FOLDER, "upimapi_mmseqs2.log"), 'w')
+    subprocess.run(['mmseqs', 'easy-cluster',
+                    DB_FILE[:-3],
+                    os.path.join(UPIMAPI_DB_FOLDER, 'upimapi_uniprot_trembl_' + "_".join(tax)),
+                    os.path.join(UPIMAPI_DB_FOLDER, "utmp"),
+                    "--cov-mode", "0",
+                    "-c", "0.99",
+                    "--min-seq-id", "0.99"],
+                check=True, stdout = ferr)
+    ferr.close()
+
+    if os.path.exists(DB_FILE[:-3]):
+        os.remove(DB_FILE[:-3])
+
+    if os.path.exists(os.path.join(UPIMAPI_DB_FOLDER, "tmp")):
+        shutil.rmtree(os.path.join(UPIMAPI_DB_FOLDER, "tmp"))
+
+    os.remove(os.path.join(UPIMAPI_DB_FOLDER, 'upimapi_uniprot_trembl_' + "_".join(tax) + "_all_seqs.fasta"))
+    os.remove(os.path.join(UPIMAPI_DB_FOLDER, 'upimapi_uniprot_trembl_' + "_".join(tax) + "_cluster.tsv"))
+
+    return os.path.join(UPIMAPI_DB_FOLDER, 'upimapi_uniprot_trembl_' + "_".join(tax) + "_rep_seq.fasta")

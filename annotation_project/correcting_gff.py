@@ -190,6 +190,9 @@ def correcting_gff(input_path):
                         new_record.append(f"Dbxref={record['DbXrefs']}")
                     if record['Gene']:
                         new_record.append(f"gene={record['Gene']}")
+                    if record['Type']:
+                        new_record.append(f"gene_biotype={record['Type']}")
+                        new_record.append(f"transcript_biotype={record['Type']}")
                     if record['Entry UniProtKB']:
                         new_record.append(f"entry={record['Entry UniProtKB']}")
                     if record['Organism']:
@@ -199,15 +202,15 @@ def correcting_gff(input_path):
                     if record['Gene_id']:
                         new_record.append(f"gene_id={record['Gene_id']}")
                     if record['GO']:
-                        new_record.append(f"go={record['GO']}")
+                        new_record.append(f"go={record['GO'].replace(';', ',')}")
                     if record['KEGG']:
-                        new_record.append(f"kegg={record['KEGG']}")
+                        new_record.append(f"kegg={record['KEGG'].replace(';', ',')}")
                     if record['UniPathway']:
-                        new_record.append(f"unipathway={record['UniPathway']}")
+                        new_record.append(f"unipathway={record['UniPathway'].replace(';', ',')}")
                     if record['Pathway']:
-                        new_record.append(f"pathway={record['Pathway']}")
+                        new_record.append(f"pathway={record['Pathway'].replace(';', ',')}")
                     if record['Keywords']:
-                        new_record.append(f"keywords={record['Keywords']}")
+                        new_record.append(f"keywords={record['Keywords'].replace(';', ',')}")
 
                     new_record = ";".join(new_record)
                     new_row = row.copy()

@@ -157,6 +157,7 @@ def assembly_unicycler_pe(fastq_1, fastq_2):
     """
     parts = os.path.split(fastq_1)
     name = parts[1].partition('.')[0]
+    name = name[:-6]
     pth = os.path.join(parts[0], "assembly_" + name)
     try:
         subprocess.run(['unicycler',
