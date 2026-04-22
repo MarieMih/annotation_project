@@ -119,16 +119,16 @@ def pipeline_since_fastq(directory):
         print(i, name)
         read_1, read_2 = filtering_fastq_pe(i)
         assembly = assembly_unicycler_pe(read_1, read_2)
-        assembly = os.path.split(i)[0] + "/assembly_" + name + "_sub" + "/assembly.fasta"
+        assembly = os.path.split(i)[0] + "/assembly_" + name + "/assembly.fasta"
         bakta_annotation(assembly, name[-24:])
-        annotation_tsv = os.path.split(i)[0] + "/assembly_" + name + "_sub" + "/bakta_annotation_" + name[-24:] + "/" + name[-24:] + ".tsv"
+        annotation_tsv = os.path.split(i)[0] + "/assembly_" + name + "/bakta_annotation_" + name[-24:] + "/" + name[-24:] + ".tsv"
         annotation(annotation_tsv)
         annotation_tsv = os.path.split(i)[0] + "/bakta_annotation_" + name[-24:] + "/" + name[-24:] + "_extended.tsv"
         tsvs.append(annotation_tsv)
 
-        shutil.copytree(os.path.split(i)[0] + "/assembly_" + name + "_sub" + "/bakta_annotation_" + name[-24:],
+        shutil.copytree(os.path.split(i)[0] + "/assembly_" + name + "/bakta_annotation_" + name[-24:],
                         os.path.split(i)[0] + "/bakta_annotation_" + name[-24:])
-        shutil.rmtree(os.path.split(i)[0] + "/assembly_" + name + "_sub" + "/bakta_annotation_" + name[-24:])
+        shutil.rmtree(os.path.split(i)[0] + "/assembly_" + name + "/bakta_annotation_" + name[-24:])
 
     make_common_protein_fasta(tsvs)
     correct_annotation_files(tsvs)
@@ -150,6 +150,28 @@ def pipeline_since_fastq(directory):
 
     if common_variables.SEND_NOTIFICATION:
         asyncio.run(send_smth(text=["Ends annotation"]))
+
+
+def pipeline_since_fastq_without_bakta(directory):
+    """"
+    Full pipeline with filteration, assembling, annotation
+    and pangenome analysis.
+    """
+    files = []
+    for filename in os.listdir(directory):
+        if filename.endswith('_1.fq.gz'):
+            file_path = os.path.join(directory, filename)
+            files.append(file_path)
+
+    tsvs = []
+    path_for_tsvs = directory + "/matrix_tsv"
+
+    for i in files:
+        name = os.path.split(i)[1].partition('.')[0]
+        name = name[:-2]
+        print(i, name)
+        read_1, read_2 = filtering_fastq_pe(i)
+        assembly = assembly_unicycler_pe(read_1, read_2)
 
 
 def pipeline_assembly_file(file):
@@ -237,14 +259,14 @@ def polishing_annotation_for_cohort(directory):
     Polishing for assemblies placed in different directories.
     Works with this pipeline assemblies and annotations only.
     Structure of input directory like:
-    assembly_S1_sub/bakta_annotation_S1
-    assembly_S2_sub/bakta_annotation_S2
-    assembly_S3_sub/bakta_annotation_S3
+    assembly_S1/bakta_annotation_S1
+    assembly_S2/bakta_annotation_S2
+    assembly_S3/bakta_annotation_S3
     ...
     """
     files = []
     for filename in os.listdir(directory):
-        if filename.endswith('_sub'):
+        if filename.startswith('assembly_'):
             file_path = os.path.join(directory, filename)
             files.append(file_path)
 
@@ -253,7 +275,7 @@ def polishing_annotation_for_cohort(directory):
 
     for i in files:
         name = os.path.split(i)[1]
-        name = name.replace("_sub", "").replace("assembly_", "")
+        name = name.replace("assembly_", "")
         print(i, name)
         if os.path.exists(i + "/bakta_annotation"):
             os.rename(i + "/bakta_annotation", i + "/bakta_annotation_" + name[-24:])

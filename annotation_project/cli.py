@@ -6,6 +6,7 @@ sys.path.append(os.path.dirname(__file__))
 import common_variables
 from main import pipeline_assembly
 from main import pipeline_since_fastq
+from main import pipeline_since_fastq_without_bakta
 from main import polishing_annotation
 from main import pipeline_assembly_file
 from main import pipeline_stat_all_tsv_in_dir
@@ -19,6 +20,10 @@ def launch_pipeline_assembly(args):
 
 def launch_pipeline_fastq(args):
     pipeline_since_fastq(args.directory)
+
+
+def launch_pipeline_fastq_nobakta(args):
+    pipeline_since_fastq_without_bakta(args.directory)
 
 
 def launch_annotation_polishing(args):
@@ -77,6 +82,12 @@ def create_parser():
     parser_fastq.add_argument("--send-tg", help="telegram messages", action="store_true")
     parser_fastq.add_argument("-t", "--threads", metavar="THREADS")
     parser_fastq.set_defaults(func=launch_pipeline_fastq)
+    
+    parser_fastq = subparsers.add_parser("fastq_only", help="filter and assembly all fastqs in directory")
+    parser_fastq.add_argument("-d", "--directory", metavar="DIRECTORY")
+    parser_fastq.add_argument("--send-tg", help="telegram messages", action="store_true")
+    parser_fastq.add_argument("-t", "--threads", metavar="THREADS")
+    parser_fastq.set_defaults(func=launch_pipeline_fastq_nobakta)
 
     parser_polish = subparsers.add_parser("polish", help="polish bakta annotation in directory")
     parser_polish.add_argument("-d", "--directory", metavar="DIRECTORY")
