@@ -9,10 +9,10 @@ import os
 sys.path.append(os.path.dirname(__file__))
 from divide_tsv import divide_tsv
 from divide_fasta import divide_fasta
-from extract_uniref import extract_uniref
 from catch_ids import catch_ids
 from correcting_gff import correcting_gff
 from converting_to_gtf import convert_gff_to_gtf
+from helpers import check_file_exists
 import common_variables
 
 
@@ -23,28 +23,20 @@ def annotation(start_file):
 
     log = logging.getLogger('ANNOTATION')
 
-    pref = start_file.rpartition('.')[0]
-    uniref100_data = pref + '_uniref100.tsv'
-    uniref100_upimapi_search_input_file = pref + '_uniref100_uniref100_ids.csv'
-    uniref100_upimapi_search_output_directory = pref + '_upimapi_ref2ref'
-    kb_upimapi_output_directory = uniref100_upimapi_search_output_directory + '/uniprotkb'
-    kb_tsv = pref + '_cds_sorf.tsv'
-    kb_faa = pref + ".faa"
-    file_for_converting = os.path.split(start_file)[0]
+    check_file_exists(start_file)
 
-###### begin - block of creating files for process
-    if os.path.exists(start_file):
-        print(f'The file {start_file} exists')
-    else:
-        print(f'The file {start_file} does not exist')
-        exit()
+    prefix_of_sample                          = start_file.rpartition('.')[0]
+    uniref100_data                            = prefix_of_sample + '_uniref100.tsv'
+    uniref100_upimapi_search_input_file       = prefix_of_sample + '_uniref100_uniref100_ids.csv'
+    uniref100_upimapi_search_output_directory = prefix_of_sample + '_upimapi_ref2ref'
+    kb_upimapi_output_directory               = os.path.join(uniref100_upimapi_search_output_directory, 'uniprotkb')
+    file_for_converting                       = os.path.dirname(start_file)
 
     try:
         divide_tsv(start_file)
     except:
         log.error('Wrong genome file format!', exc_info=True)
         sys.exit('ERROR: wrong genome file format!')
-###### end - block of creating files for process
 
 ###### begin - block for records with UniRef100 and without UserProtein
     try:
@@ -56,36 +48,25 @@ def annotation(start_file):
     if not os.path.exists(kb_upimapi_output_directory):
         os.makedirs(kb_upimapi_output_directory)
     
-    result_upimapi_ref2kb = subprocess.run(['upimapi',
-                                            '-i', uniref100_upimapi_search_input_file,
-                                            '-o', kb_upimapi_output_directory,
-                                            '--from-db', 'UniProtKB AC/ID',
-                                            '--to-db', 'UniProtKB',
-                                            '--columns', "Entry&Entry Name&Gene Names&Protein names&EC number&Function [CC]&Pathway&Keywords&Protein existence&Gene Ontology (GO)&Protein families&Taxonomic lineage&Taxonomic lineage (Ids)&Taxonomic lineage IDs (SPECIES)&Taxonomic lineage (SPECIES)&Organism&Organism (ID)&BioCyc&BRENDA&CDD&eggNOG&Ensembl&InterPro&KEGG&Pfam&Reactome&RefSeq&UniPathway",
-                                            '-t', '1'],
-                                           check=True)
+    subprocess.run(['upimapi',
+                    '-i', uniref100_upimapi_search_input_file,
+                    '-o', kb_upimapi_output_directory,
+                    '--from-db', 'UniProtKB AC/ID',
+                    '--to-db', 'UniProtKB',
+                    '--columns', "Entry&Entry Name&Gene Names&Protein names&EC number&Function [CC]&Pathway&Keywords&Protein existence&Gene Ontology (GO)&Protein families&Taxonomic lineage&Taxonomic lineage (Ids)&Taxonomic lineage IDs (SPECIES)&Taxonomic lineage (SPECIES)&Organism&Organism (ID)&BioCyc&BRENDA&CDD&eggNOG&Ensembl&InterPro&KEGG&Pfam&Reactome&RefSeq&UniPathway",
+                    '-t', '1'],
+                    check=True)
 ###### end - block for records with UniRef100 and without UserProtein
 
-# ######## begin - block for records without UniRef100 and without UserProtein
-#     try:
-#         catch_ids(kb_tsv, kb_faa)
-#     except:
-#         log.error('catch_ids error!', exc_info=True)
-#         sys.exit('ERROR: catch_ids failed!')
-# ######## end - block for records without UniRef100 and without UserProtein
-
-######## begin - block creating gff
     try:
         file_annotation_gff = correcting_gff(file_for_converting)
     except:
         log.error('correcting gff error!', exc_info=True)
         sys.exit('ERROR: correcting_gff failed!')
-######## end - block creating gff
 
-###### begin - block of creating fasta files for process
     try:
         divide_fasta_res = divide_fasta(start_file)
     except:
         log.error('divide fasta error!', exc_info=True)
         sys.exit('ERROR: divide fasta failed!')
-###### begin - block of creating fasta files for process
+
