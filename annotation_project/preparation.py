@@ -178,7 +178,7 @@ def bakta_annotation(fasta, locus_tag):
     """
     print(common_variables.BAKTA_DB)
     parts = os.path.split(fasta)
-    pth = os.path.join(parts[0], "bakta_annotation_" + locus_tag)
+    pth   = os.path.join(parts[0], "bakta_annotation_" + locus_tag)
     f = open(os.path.join(parts[0], "bakta_annotation_" + locus_tag + ".log"), "w", encoding="utf-8")
     try:
         subprocess.run(['bakta',

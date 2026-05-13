@@ -1,36 +1,33 @@
 import os
 import subprocess
+from helpers import union_files
 
 
-def union_files(input_list, output_file):
-    with open(output_file, 'w') as outfile:
-        for fname in input_list:
-            with open(fname) as infile:
-                for line in infile:
-                    outfile.write(line)
+def make_common_protein_fasta(tool, faa, dir):
+    match tool:
+        case "MMSEQS2":
+            cluster_file = make_with_MMSEQS2(faa, dir)
+        case _:
+            print(f"{tool} is not correct value and not supported now.")
+            cluster_file = None
+    return cluster_file
 
 
-def make_common_protein_fasta(tsvs):
+def make_with_MMSEQS2(fasta_files, dir):
+    new_fasta_path = os.path.join(dir, "mmseqs_union_results_faa")
+    if not os.path.exists(new_fasta_path):
+        os.makedirs(new_fasta_path)
+    new_fasta_file = os.path.join(new_fasta_path, "union.faa")
 
-    for i in ["_detected", "_unknown"]:
-        fasta_files = list()
-        for file in tsvs:
-            fasta_files.append(file.replace("_extended.tsv", i + ".faa"))
+    union_files(fasta_files, new_fasta_file)
 
-        tmp = os.path.split(fasta_files[0])[0]
-        tmp = os.path.split(tmp)[0]
-        new_fasta_path = os.path.join(tmp, "union" + i + "_faa")
-        if not os.path.exists(new_fasta_path):
-            os.makedirs(new_fasta_path)
-        new_fasta_file = os.path.join(new_fasta_path, "union" + i + ".faa")
-
-        union_files(fasta_files, new_fasta_file)
-
-        result = subprocess.run(['mmseqs', 'easy-cluster',
-                                 new_fasta_file,
-                                 os.path.join(new_fasta_path, "union"),
-                                 os.path.join(new_fasta_path, "tmp"),
-                                 "--cov-mode", "0",
-                                 "-c", "0.8",
-                                 "--min-seq-id", "0.9"],
-                                check=True)
+    result = subprocess.run(['mmseqs', 'easy-cluster',
+                                new_fasta_file,
+                                os.path.join(new_fasta_path, "union"),
+                                os.path.join(new_fasta_path, "tmp"),
+                                "--cov-mode", "0",
+                                "-c", "0.8",
+                                "--min-seq-id", "0.9"],
+                            check=True)
+    
+    return os.path.join(new_fasta_path, "union_cluster.tsv")

@@ -9,23 +9,44 @@ from random import randint
 import common_variables
 
 
-def create_directory_with_soft_links(tsvs, target_or):
-    target = os.path.abspath(target_or)  # отдебажить!!!
-    if not os.path.exists(target):
-        os.makedirs(target)
-    for i in tsvs:
-        new_link = os.path.split(i)[1]
-        os.symlink(os.path.abspath(i), target + '/' + new_link)  # отдебажить!!!
+def create_presence_absence_matrix(directory, cluster_file):
+
+    files = []
+    for filename in os.listdir(directory):
+        if filename.endswith('.tsv'):
+            files.append(filename.replace(".tsv",""))
+
+    clusters = pd.read_csv(cluster_file, sep='\t', header=None, names=["parent", "child"])
+    all_genes = list(set.union(clusters[0]))
+    clusters = dict(zip(clusters["child"], clusters["parent"]))
+
+    presence_absence_matrix = pd.DataFrame(0, index=all_genes, columns=files)
+
+    for filename in os.listdir(directory):
+        if filename.endswith('.tsv'):
+            file_path = os.path.join(directory, filename)
+            df = pd.read_csv(file_path, sep='\t', header=None)
+            gene_ids = df["Locus tag"].unique()
+
+            for i in gene_ids:
+                presence_absence_matrix.loc[clusters[i], filename] = i
+
+    presence_absence_matrix['count'] = presence_absence_matrix.sum(axis=1)
+    presence_absence_matrix = presence_absence_matrix.sort_values(by='count', ascending=False)
+    presence_absence_matrix = presence_absence_matrix.drop(columns=['count'])
+    presence_absence_matrix.to_csv(os.path.join(directory, 'presence_absence_matrix.csv'))
+
+    return directory + "/" + 'presence_absence_matrix.csv'
 
 
-def create_presence_absence_matrix(directory):
+def create_presence_absence_matrix_by_symbol(directory):
     gene_dict = {}
 
     for filename in os.listdir(directory):
         if filename.endswith('extended.tsv'):
             file_path = os.path.join(directory, filename)
             df = pd.read_csv(file_path, sep='\t', header=None)
-            gene_ids = df[6].unique()  # Gene symbol
+            gene_ids = df["Gene"].unique()  # Gene symbol
             gene_dict[filename] = set(gene_ids)
 
     all_genes = list(set.union(*gene_dict.values()))

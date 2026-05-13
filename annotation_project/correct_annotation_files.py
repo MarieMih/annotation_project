@@ -1,7 +1,6 @@
 import os
 import csv
 import pandas as pd
-from find_unknown_proteins import finding_from_fasta
 
 
 def create_acronym(phrase):

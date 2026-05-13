@@ -8,7 +8,6 @@ import logging
 import os
 sys.path.append(os.path.dirname(__file__))
 from divide_tsv import divide_tsv
-from divide_fasta import divide_fasta
 from catch_ids import catch_ids
 from correcting_gff import correcting_gff
 from converting_to_gtf import convert_gff_to_gtf
