@@ -14,7 +14,7 @@ def make_common_protein_fasta(tool, faa, dir):
 
 
 def make_with_MMSEQS2(fasta_files, dir):
-    new_fasta_path = os.path.join(dir, "mmseqs_union_results_faa")
+    new_fasta_path = os.path.join(dir, "mmseqs_results_faa")
     if not os.path.exists(new_fasta_path):
         os.makedirs(new_fasta_path)
     new_fasta_file = os.path.join(new_fasta_path, "union.faa")
