@@ -50,4 +50,13 @@ def create_directory_with_soft_links(tsvs, target_or):
     create_directory(target)
     for i in tsvs:
         new_link = os.path.split(i)[1]
-        os.symlink(os.path.abspath(i), target + '/' + new_link)  # отдебажить!!!
+        os.symlink(os.path.abspath(i), os.path.join(target, new_link))  # отдебажить!!!
+
+
+def create_acronym(phrase: str):
+    if (phrase == "") or (phrase == "nan"):
+        return "HP"
+    trimmed = phrase.split('(')[0].strip()
+    words = trimmed.split()
+    acronym = "".join(word[0].upper() for word in words if word)
+    return acronym

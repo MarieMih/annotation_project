@@ -8,18 +8,22 @@ import matplotlib.pyplot as plt
 from random import randint
 import common_variables
 from collections import defaultdict
+from helpers import create_acronym
+from Bio import SeqIO
 
 
 def create_presence_absence_matrix(directory, cluster_file, mode, output_directory):
+
     names = "Sequence Id,Type,Start,Stop,Strand,Locus Tag,Gene,Product,DbXrefs".split(",")
+
     files = []
     for filename in os.listdir(directory):
         if filename.endswith('.tsv'):
             files.append(filename.replace(".tsv",""))
 
-    clusters  = pd.read_csv(cluster_file, sep='\t', header=None, names=["parent", "child"])
+    clusters     = pd.read_csv(cluster_file, sep='\t', header=None, names=["parent", "child"])
     parent_locus = list(set(clusters["parent"]))
-    clusters  = dict(zip(clusters["child"], clusters["parent"]))
+    clusters     = dict(zip(clusters["child"], clusters["parent"]))
 
     match mode:
         case "binary":
@@ -76,7 +80,7 @@ def create_presence_absence_matrix(directory, cluster_file, mode, output_directo
             to_update = to_update.set_index("Locus Tag")
             to_update = to_update["Gene Product".split()]
             presence_absence_matrix.loc[to_update.index, ['Gene', 'Product']] = to_update[['Gene', 'Product']]
-            presence_absence_matrix["Genome"] = i.replace(".tsv", "")
+            presence_absence_matrix.loc[to_update.index, ['Genome']] = i.replace(".tsv", "")
 
         presence_absence_matrix = presence_absence_matrix.reset_index(names='Locus Tag')
         presence_absence_matrix["PID"] = range(1, len(presence_absence_matrix) + 1)
@@ -190,8 +194,9 @@ def pangenome_analysis(directory_or):
 
 
 def pangenome_tsv(directory, cluster_file, matrix, output_directory):
-    names = "Sequence Id,Type,Start,Stop,Strand,Locus Tag,Gene,Product,DbXrefs".split(",")
-    pannames = "Sequence Id,Type,Start,Stop,Strand,Genome,Gene,Gene Name,Gene synonymes,Product,DbXrefs,Organism,Inference,KEGG,GO,Gene id,Transcript id".split(",")
+    names      = "Sequence Id,Type,Start,Stop,Strand,Locus Tag,Gene,Product,DbXrefs".split(",")
+    infr_names = "Sequence Id,Type,Start,Stop,Strand,Locus Tag,Score,Evalue,Query Cov,Subject Cov,Id,Accession".split(",")
+    pannames   = "Sequence Id,Type,Start,Stop,Strand,Gene,Gene Name,Gene synonymes,Product,DbXrefs,Organism,Inference,KEGG,GO,gene_id,transcript_id".split(",")
 
     clusters  = pd.read_csv(cluster_file, sep='\t', header=None, names=["parent", "child"])
     clusters  = dict(zip(clusters["child"], clusters["parent"]))
@@ -199,21 +204,62 @@ def pangenome_tsv(directory, cluster_file, matrix, output_directory):
     pangenome_table = pd.read_csv(matrix, sep="\t", index_col=0, header=0)
     pangenome_table = pangenome_table[["PID", "Genome"]]
     pangenome_table[pannames] = ""
-
+    pangenome_table[["Start", "Stop"]] = -1
+    pangenome_table = pangenome_table.astype({"Start": int, "Stop": int})
     parent_fasta = pangenome_table.groupby('Genome').apply(lambda x: set(x.index)).to_dict()
     
     for i in parent_fasta.keys():
         file_path = os.path.join(directory, i + ".tsv")
+        infr_path = os.path.join(directory.replace("tsvs", "inferences"), i + ".inference.tsv")
+
         df = pd.read_csv(file_path, sep='\t', comment="#", header=None, names=names)  
         to_update = df[df["Locus Tag"].isin(parent_fasta[i])]
         to_update = to_update.set_index("Locus Tag")
-        pangenome_table.loc[to_update.index, to_update.columns] = to_update
+        pangenome_table.update(to_update)
+
+        df = pd.read_csv(infr_path, sep='\t', comment="#", header=None, names=infr_names)  
+        to_update = df[df["Locus Tag"].isin(parent_fasta[i])]
+        to_update = to_update.set_index("Locus Tag")
+        to_update = to_update.rename(columns={"Accession": "Inference"})
+        to_update = to_update["Inference"]
+        pangenome_table.update(to_update)
+
+    # check_api = pangenome_table["Inference"].str.split(":")
+
+    pangenome_table["Gene Name"] = np.where(
+        pangenome_table["Gene"] == "",
+        "EGN_" + pangenome_table["Product"].apply(create_acronym) + "_P" + pangenome_table["PID"].astype("str"),
+        pangenome_table["Gene"]
+    )
+
+    pangenome_table["gene_id"]       = pangenome_table["Type"] + "|" + pangenome_table["Gene Name"] + "|" + pangenome_table["Inference"].astype("str")
+    pangenome_table["transcript_id"] = pangenome_table["gene_id"]
 
     pangenome_table = pangenome_table.reset_index(names='PID Locus Tag')
 
-    # cols_to_move = ['Locus Tag', 'PID', "Gene", "Product"]
-    # new_order = cols_to_move + [c for c in pangenome_table.columns if c not in cols_to_move]
-    # pangenome_table = pangenome_table[new_order]
-
     pangenome_table.to_csv(os.path.join(output_directory, 'pangenome_table.tsv'), index=False, sep="\t")
     return os.path.join(output_directory, 'pangenome_table.tsv')   
+
+
+def pangenome_fasta(directory, pangenome_table, output_directory, ftype: str):
+    if ftype not in "faa ffn".split():
+        print(f"{ftype} not fasta.")
+        return
+
+    pangenome_table = pd.read_csv(pangenome_table, sep="\t", index_col=None, header=0)
+    parent_fasta = pangenome_table.groupby('Genome')["PID Locus Tag"].apply(set).to_dict()
+
+    sorted_tags = list(pangenome_table["PID Locus Tag"])
+
+    out_rec = defaultdict()
+    for i in parent_fasta.keys():
+        tags    = parent_fasta[i]
+        with open(os.path.join(directory, i + "." + ftype)) as handle:
+            for record in SeqIO.parse(handle, "fasta"):
+                if record.id in tags:
+                    out_rec[record.id] = record
+
+    sorted_data = dict(sorted(out_rec.items(), key=lambda x: sorted_tags.index(x[0])))
+
+    with open(os.path.join(output_directory, "pangenome." + ftype), "w") as output_handle:
+        SeqIO.write(list(sorted_data.values()), output_handle, "fasta")
