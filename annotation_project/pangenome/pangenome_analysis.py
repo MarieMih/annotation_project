@@ -1,14 +1,15 @@
 import os
 import itertools
 import asyncio
-import telegram_send
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from random import randint
+import seaborn as sns
+from math import comb
+from random import randint, sample, shuffle
 import common_variables
 from collections import defaultdict
-from helpers import create_acronym
+from helpers import create_acronym, send_smth
 from Bio import SeqIO
 
 
@@ -28,6 +29,8 @@ def create_presence_absence_matrix(directory, cluster_file, mode, output_directo
     match mode:
         case "binary":
             initial_value = 0
+        case "numeric":
+            initial_value = 0
         case "locus":
             initial_value = ""
             parent_fasta = defaultdict(set)
@@ -40,7 +43,7 @@ def create_presence_absence_matrix(directory, cluster_file, mode, output_directo
     for filename in os.listdir(directory):
         if filename.endswith('.tsv'):
             file_path = os.path.join(directory, filename)
-            df = pd.read_csv(file_path, sep='\t', comment="#", header=None, names=names)
+            df = pd.read_csv(file_path, sep='\t', comment="#", header=0, names=names)
             df = df[df["Type"].isin("cds sorf".split())]
             gene_ids = set(df["Locus Tag"].unique())
 
@@ -51,12 +54,22 @@ def create_presence_absence_matrix(directory, cluster_file, mode, output_directo
                 match mode:
                     case "binary":
                         value = 1
+                        presence_absence_matrix.loc[clusters[i], filename.replace(".tsv", "")] = value
+                    case "numeric":
+                        value = 1
+                        presence_absence_matrix.loc[clusters[i], filename.replace(".tsv", "")] += 1
                     case "locus":
                         value = i
-                presence_absence_matrix.loc[clusters[i], filename.replace(".tsv", "")] = value 
+                        current_value = presence_absence_matrix.loc[clusters[i], filename.replace(".tsv", "")]
+                        if current_value == "":
+                            presence_absence_matrix.loc[clusters[i], filename.replace(".tsv", "")] = value
+                        else:
+                            presence_absence_matrix.loc[clusters[i], filename.replace(".tsv", "")] = current_value + ";" + value
 
     match mode:
         case "binary":
+            presence_absence_matrix['count'] = presence_absence_matrix.sum(axis=1)
+        case "numeric":
             presence_absence_matrix['count'] = presence_absence_matrix.sum(axis=1)
         case "locus":
             presence_absence_matrix['count'] = (presence_absence_matrix != "").sum(axis=1)
@@ -69,13 +82,18 @@ def create_presence_absence_matrix(directory, cluster_file, mode, output_directo
         presence_absence_matrix.to_csv(os.path.join(output_directory, 'presence_absence_matrix_binary.tsv'), index=False, sep="\t")
         return os.path.join(output_directory, 'presence_absence_matrix_binary.tsv')
 
+    if mode == "numeric":
+        presence_absence_matrix = presence_absence_matrix.reset_index(names='Locus Tag')
+        presence_absence_matrix.to_csv(os.path.join(output_directory, 'presence_absence_matrix_numeric.tsv'), index=False, sep="\t")
+        return os.path.join(output_directory, 'presence_absence_matrix_numeric.tsv')
+
     if mode == "locus":
         presence_absence_matrix["Gene"] = ""
         presence_absence_matrix["Product"] = ""
     
         for i in parent_fasta.keys():
             file_path = os.path.join(directory, i)
-            df = pd.read_csv(file_path, sep='\t', comment="#", header=None, names=names)  
+            df = pd.read_csv(file_path, sep='\t', comment="#", header=0, names=names)  
             to_update = df[df["Locus Tag"].isin(parent_fasta[i])]
             to_update = to_update.set_index("Locus Tag")
             to_update = to_update["Gene Product".split()]
@@ -90,8 +108,13 @@ def create_presence_absence_matrix(directory, cluster_file, mode, output_directo
         presence_absence_matrix = presence_absence_matrix[new_order]
 
         presence_absence_matrix.to_csv(os.path.join(output_directory, 'presence_absence_matrix.tsv'), index=False, sep="\t")
-        return os.path.join(output_directory, 'presence_absence_matrix.tsv')      
+        return os.path.join(output_directory, 'presence_absence_matrix.tsv')    
 
+    match mode:
+        case "binary":
+            return os.path.join(output_directory, 'presence_absence_matrix_binary.tsv')
+        case "locus":
+            return os.path.join(output_directory, 'presence_absence_matrix.tsv')  
 
 
 def create_presence_absence_matrix_by_symbol(directory):
@@ -119,87 +142,13 @@ def create_presence_absence_matrix_by_symbol(directory):
     return directory + "/" + 'presence_absence_matrix.csv'
 
 
-def calculate_core_genome_combinations(df):
-    core_genome_sizes = {i: [] for i in range(1, len(df.columns) + 1)}
-
-    for i in range(1, len(df.columns) + 1):
-        count = 0
-        for combo in itertools.combinations(df.columns, i):
-            subset = df[list(combo)]
-            core_genes = subset.sum(axis=1) == i
-            core_genome_sizes[i].append(core_genes.sum())
-            if count == 1000:
-                break
-            count += 1
-
-    return core_genome_sizes
-
-
-def calculate_pangenome_combinations(df):
-    pangenome_sizes = {i: [] for i in range(1, len(df.columns) + 1)}
-
-    for i in range(1, len(df.columns) + 1):
-        count = 0
-        for combo in itertools.combinations(df.columns, i):
-            subset = df[list(combo)]
-            pangenome_genes = subset.sum(axis=1) > 0
-            pangenome_sizes[i].append(pangenome_genes.sum())
-            if count == 1000:
-                break
-            count += 1
-
-    return pangenome_sizes
-
-
-async def send_smth(cor_image, pan_image):
-    with open(cor_image, "rb") as f:
-        await telegram_send.send(images=[f])
-    with open(pan_image, "rb") as f:
-        await telegram_send.send(images=[f])
-
-
-def pangenome_analysis(directory_or):
-    directory = os.path.abspath(directory_or)  # отдебажить!!!
-    file_path = create_presence_absence_matrix(directory)
-    data = pd.read_csv(file_path, sep=',', index_col=0)
-    data.columns = [i.replace("_extended", "") for i in data.columns]
-
-    core_genome_sizes = calculate_core_genome_combinations(data)
-    boxplot_data = [core_genome_sizes[i] for i in range(1, len(data.columns) + 1)]
-
-    plt.figure(figsize=(10, 6))
-    plt.boxplot(boxplot_data, tick_labels=[str(i) for i in range(1, len(data.columns) + 1)])
-    plt.xlabel('Number of Samples')
-    plt.ylabel('Core Genome Size')
-    plt.title('Core Genome Size Distribution by Number of Samples')
-    plt.grid(True)
-    cor_image = directory + "/" + "cor.png"
-    plt.savefig(cor_image)
-
-    pangenome_sizes = calculate_pangenome_combinations(data)
-    boxplot_data = [pangenome_sizes[i] for i in range(1, len(data.columns) + 1)]
-
-    plt.figure(figsize=(10, 6))
-    plt.boxplot(boxplot_data, tick_labels=[str(i) for i in range(1, len(data.columns) + 1)])
-    plt.xlabel('Number of Samples')
-    plt.ylabel('Pangenome Size')
-    plt.title('Pangenome Size Distribution by Number of Samples')
-    plt.grid(True)
-    pan_image = directory + "/" + "pan.png"
-    plt.savefig(pan_image)
-
-    if common_variables.SEND_NOTIFICATION:
-        asyncio.run(send_smth(cor_image, pan_image))
-
-
-
-def pangenome_tsv(directory, cluster_file, matrix, output_directory):
+def pangenome_tsv(directory, cluster_file, matrix, output_directory, fname = 'pangenome_table.tsv'):
     names      = "Sequence Id,Type,Start,Stop,Strand,Locus Tag,Gene,Product,DbXrefs".split(",")
     infr_names = "Sequence Id,Type,Start,Stop,Strand,Locus Tag,Score,Evalue,Query Cov,Subject Cov,Id,Accession".split(",")
     pannames   = "Sequence Id,Type,Start,Stop,Strand,Gene,Gene Name,Gene synonymes,Product,DbXrefs,Organism,Inference,KEGG,GO,gene_id,transcript_id".split(",")
 
-    clusters  = pd.read_csv(cluster_file, sep='\t', header=None, names=["parent", "child"])
-    clusters  = dict(zip(clusters["child"], clusters["parent"]))
+    clusters = pd.read_csv(cluster_file, sep='\t', header=None, names=["parent", "child"])
+    clusters = dict(zip(clusters["child"], clusters["parent"]))
 
     pangenome_table = pd.read_csv(matrix, sep="\t", index_col=0, header=0)
     pangenome_table = pangenome_table[["PID", "Genome"]]
@@ -212,12 +161,12 @@ def pangenome_tsv(directory, cluster_file, matrix, output_directory):
         file_path = os.path.join(directory, i + ".tsv")
         infr_path = os.path.join(directory.replace("tsvs", "inferences"), i + ".inference.tsv")
 
-        df = pd.read_csv(file_path, sep='\t', comment="#", header=None, names=names)  
+        df = pd.read_csv(file_path, sep='\t', comment="#", header=0, names=names)  
         to_update = df[df["Locus Tag"].isin(parent_fasta[i])]
         to_update = to_update.set_index("Locus Tag")
         pangenome_table.update(to_update)
 
-        df = pd.read_csv(infr_path, sep='\t', comment="#", header=None, names=infr_names)  
+        df = pd.read_csv(infr_path, sep='\t', comment="#", header=0, names=infr_names)  
         to_update = df[df["Locus Tag"].isin(parent_fasta[i])]
         to_update = to_update.set_index("Locus Tag")
         to_update = to_update.rename(columns={"Accession": "Inference"})
@@ -237,11 +186,11 @@ def pangenome_tsv(directory, cluster_file, matrix, output_directory):
 
     pangenome_table = pangenome_table.reset_index(names='PID Locus Tag')
 
-    pangenome_table.to_csv(os.path.join(output_directory, 'pangenome_table.tsv'), index=False, sep="\t")
-    return os.path.join(output_directory, 'pangenome_table.tsv')   
+    pangenome_table.to_csv(os.path.join(output_directory, fname), index=False, sep="\t")
+    return os.path.join(output_directory, fname)   
 
 
-def pangenome_fasta(directory, pangenome_table, output_directory, ftype: str):
+def pangenome_fasta(directory, pangenome_table, output_directory, ftype: str, fname = "pangenome."):
     if ftype not in "faa ffn".split():
         print(f"{ftype} not fasta.")
         return
@@ -261,5 +210,91 @@ def pangenome_fasta(directory, pangenome_table, output_directory, ftype: str):
 
     sorted_data = dict(sorted(out_rec.items(), key=lambda x: sorted_tags.index(x[0])))
 
-    with open(os.path.join(output_directory, "pangenome." + ftype), "w") as output_handle:
+    with open(os.path.join(output_directory, fname + ftype), "w") as output_handle:
         SeqIO.write(list(sorted_data.values()), output_handle, "fasta")
+
+
+def calculate_core_genome_combinations(df):
+    core_genome_sizes = {i: [] for i in range(1, len(df.columns) + 1)}
+
+    for i in range(1, len(df.columns) + 1):
+        if comb(len(df.columns), i) < 1000:
+            for combo in itertools.combinations(df.columns, i):
+                subset = df[list(combo)]
+                core_genes = subset.sum(axis=1) == i
+                core_genome_sizes[i].append(core_genes.sum())
+        else:
+            count = 0
+            for _ in range(1000):
+                subset = df[list(sample(sorted(df.columns), i))]
+                core_genes = subset.sum(axis=1) == i
+                core_genome_sizes[i].append(core_genes.sum())
+                if count == 1000:
+                    break
+                count += 1
+
+    return core_genome_sizes
+
+
+def calculate_pangenome_combinations(df):
+    pangenome_sizes = {i: [] for i in range(1, len(df.columns) + 1)}
+
+    for i in range(1, len(df.columns) + 1):
+        if comb(len(df.columns), i) < 1000:
+            for combo in itertools.combinations(df.columns, i):
+                subset = df[list(combo)]
+                pangenome_genes = subset.sum(axis=1) > 0
+                pangenome_sizes[i].append(pangenome_genes.sum())
+        else:
+            count = 0
+            for _ in range(min(comb(len(df.columns), i), 1000)):
+                subset = df[list(sample(sorted(df.columns), i))]
+                pangenome_genes = subset.sum(axis=1) > 0
+                pangenome_sizes[i].append(pangenome_genes.sum())
+                if count == 1000:
+                    break
+                count += 1
+
+    return pangenome_sizes
+
+
+
+
+
+def pangenome_curves(file_path):
+    directory = os.path.dirname(file_path)
+    data = pd.read_csv(file_path, sep='\t', index_col=0, header=0)
+    set_size = len(data.columns)
+
+    core_genome_sizes = calculate_core_genome_combinations(data)
+
+    boxplot_data = [core_genome_sizes[i] for i in range(1, set_size + 1)]
+    plt.figure(figsize=(10, 6))
+    # sns.boxplot(boxplot_data, color="0.8", width=0.3)
+    # sns.stripplot(boxplot_data)
+    sns.violinplot(boxplot_data)
+    plt.xlabel('Number of Samples')
+    plt.ylabel('Core Genome Size')
+    plt.title('Core Genome Size Distribution by Number of Samples')
+    plt.grid(True)
+    cor_image = os.path.join(directory, "cor.png")
+    plt.savefig(cor_image)
+
+    pangenome_sizes = calculate_pangenome_combinations(data)
+
+    boxplot_data = [pangenome_sizes[i] for i in range(1, set_size + 1)]
+    plt.figure(figsize=(10, 6))
+    # sns.boxplot(boxplot_data, color="0.8", width=0.3)
+    # sns.stripplot(boxplot_data)
+    sns.violinplot(boxplot_data)
+    plt.xlabel('Number of Samples')
+    plt.ylabel('Pangenome Size')
+    plt.title('Pangenome Size Distribution by Number of Samples')
+    plt.grid(True)
+    pan_image = os.path.join(directory, "pan.png")
+    plt.savefig(pan_image)
+
+    if common_variables.SEND_NOTIFICATION:
+        asyncio.run(send_smth(cor_image, pan_image))
+
+    return [core_genome_sizes[set_size][0], pangenome_sizes[set_size][0]]

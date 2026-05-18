@@ -2,6 +2,7 @@ import sys
 import subprocess
 import os
 from datetime import datetime
+import telegram_send
 
 
 def check_file_exists(file):
@@ -10,9 +11,10 @@ def check_file_exists(file):
         return 0
     if os.path.isfile(file):
         print(f'The file {file} does not exist.')
+        return 1
     else:
         print(f'The file {file} is not regular file.')
-    exit()
+        return 2
 
 def check_dir_exists(directory):
     if os.path.isdir(directory):
@@ -60,3 +62,9 @@ def create_acronym(phrase: str):
     words = trimmed.split()
     acronym = "".join(word[0].upper() for word in words if word)
     return acronym
+
+async def send_smth(cor_image, pan_image):
+    with open(cor_image, "rb") as f:
+        await telegram_send.send(images=[f])
+    with open(pan_image, "rb") as f:
+        await telegram_send.send(images=[f])

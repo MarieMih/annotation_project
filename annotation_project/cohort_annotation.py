@@ -4,12 +4,13 @@ import shutil
 sys.path.append(os.path.dirname(__file__))
 import common_variables
 from converting_to_gtf import convert_gff_to_gtf
-from correct_annotation_files import correct_annotation_files, correct_tsv_file
-from pangenome.pangenome_analysis import pangenome_analysis, create_presence_absence_matrix, pangenome_tsv, pangenome_fasta
+from correct_annotation_files import correct_tsv_file, precorrect_tsv_file
+from pangenome.pangenome_analysis import pangenome_curves, create_presence_absence_matrix, pangenome_tsv, pangenome_fasta
 from preparation import bakta_annotation
 from make_common_protein_fasta import make_common_protein_fasta
+from make_common_nucl_fasta import make_common_rna_fasta
 from metrics.stat import make_stat_file
-from helpers import create_directory, create_directory_with_soft_links
+from helpers import create_directory, create_directory_with_soft_links, check_file_exists
 from pathlib import Path
 
 
@@ -40,11 +41,15 @@ def cohort_annotation(directory, data_line):
     for i in files:
         name = os.path.split(i)[-1].replace("bakta_annotation_", "")
         annotation_tsv = os.path.join(i, name[-24:] + ".tsv")
+        print(annotation_tsv)
+        if check_file_exists(annotation_tsv.replace(".tsv", ".bakta.tsv")) != 0:
+            shutil.copy(annotation_tsv, annotation_tsv.replace(".tsv", ".bakta.tsv"))
+        precorrect_tsv_file(annotation_tsv)
         tsvs.append(annotation_tsv)
         inference.append(annotation_tsv.replace(".tsv", ".inference.tsv"))
         faa.append(annotation_tsv.replace(".tsv", ".faa"))
         ffn.append(annotation_tsv.replace(".tsv", ".ffn"))
-
+        
 
     common_pangenome_path = os.path.join(directory, "pangenome_data_" + data_line)
     path_for_tsvs         = os.path.join(common_pangenome_path, "tsvs")
@@ -58,10 +63,12 @@ def cohort_annotation(directory, data_line):
     create_directory_with_soft_links(ffn, path_for_ffn)
 
     cluster_file = make_common_protein_fasta(common_variables.TOOL, [tsvtmp.replace(".tsv", ".faa") for tsvtmp in tsvs], common_pangenome_path)
+    rna_file     = make_common_rna_fasta(tsvs, common_pangenome_path)
     shutil.copy(cluster_file, os.path.join(common_pangenome_path, "clusters.tsv"))
 
-    matrix_binary = create_presence_absence_matrix(path_for_tsvs, cluster_file, "binary", common_pangenome_path)
-    matrix        = create_presence_absence_matrix(path_for_tsvs, cluster_file, "locus", common_pangenome_path)
+    matrix_binary  = create_presence_absence_matrix(path_for_tsvs, cluster_file, "binary", common_pangenome_path)
+    matrix_numeric = create_presence_absence_matrix(path_for_tsvs, cluster_file, "numeric", common_pangenome_path)
+    matrix         = create_presence_absence_matrix(path_for_tsvs, cluster_file, "locus", common_pangenome_path)
 
     pangenome = pangenome_tsv(path_for_tsvs, cluster_file, matrix, common_pangenome_path)
     pangenome_fasta(path_for_faa, pangenome, common_pangenome_path, "faa")
@@ -70,17 +77,14 @@ def cohort_annotation(directory, data_line):
     for i in tsvs:
         correct_tsv_file(str(Path(i).resolve()), pangenome, cluster_file)
 
-    # correct_annotation_files(tsvs)
-
     # for i in tsvs:
     #     fn = i.replace(".tsv", ".gff3")
     #     convert_gff_to_gtf(fn)
 
 
-    # print("Start pangenome")
-    # pangenome_analysis(common_pangenome_path)
+    print("Start pangenome")
+    coresize, pansize = pangenome_curves(matrix_binary)
+    print(f"Core: {coresize}, pan: {pansize}")
 
     # print("Start stat creation")
     # make_stat_file(common_pangenome_path)
-
-
