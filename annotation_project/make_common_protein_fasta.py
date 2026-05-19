@@ -1,16 +1,19 @@
 import os
 import subprocess
+import shutil
 from helpers import union_files
 
 
-def make_common_protein_fasta(tool, faa, dir):
+def make_common_protein_fasta(tool, faa, dir, outdir):
     match tool:
         case "MMSEQS2":
             cluster_file = make_with_MMSEQS2(faa, dir)
         case _:
             print(f"{tool} is not correct value and not supported now.")
-            cluster_file = None
-    return cluster_file
+            return None
+    final_cluster_file = os.path.join(outdir, "clusters.tsv")
+    shutil.copy(cluster_file, final_cluster_file)
+    return final_cluster_file
 
 
 def make_with_MMSEQS2(fasta_files, dir):

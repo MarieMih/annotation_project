@@ -13,7 +13,7 @@ from helpers import create_acronym, send_smth
 from Bio import SeqIO
 
 
-def create_presence_absence_matrix(directory, cluster_file, mode, output_directory):
+def create_presence_absence_matrix(directory, cluster_file, mode, output_directory, fname = 'presence_absence_matrix'):
 
     names = "Sequence Id,Type,Start,Stop,Strand,Locus Tag,Gene,Product,DbXrefs".split(",")
 
@@ -44,27 +44,27 @@ def create_presence_absence_matrix(directory, cluster_file, mode, output_directo
         if filename.endswith('.tsv'):
             file_path = os.path.join(directory, filename)
             df = pd.read_csv(file_path, sep='\t', comment="#", header=0, names=names)
-            df = df[df["Type"].isin("cds sorf".split())]
             gene_ids = set(df["Locus Tag"].unique())
 
             if mode == "locus":
                 parent_fasta[filename].update(set.intersection(set(parent_locus), gene_ids))
 
             for i in gene_ids:
-                match mode:
-                    case "binary":
-                        value = 1
-                        presence_absence_matrix.loc[clusters[i], filename.replace(".tsv", "")] = value
-                    case "numeric":
-                        value = 1
-                        presence_absence_matrix.loc[clusters[i], filename.replace(".tsv", "")] += 1
-                    case "locus":
-                        value = i
-                        current_value = presence_absence_matrix.loc[clusters[i], filename.replace(".tsv", "")]
-                        if current_value == "":
+                if clusters.get(i) is not None:
+                    match mode:
+                        case "binary":
+                            value = 1
                             presence_absence_matrix.loc[clusters[i], filename.replace(".tsv", "")] = value
-                        else:
-                            presence_absence_matrix.loc[clusters[i], filename.replace(".tsv", "")] = current_value + ";" + value
+                        case "numeric":
+                            value = 1
+                            presence_absence_matrix.loc[clusters[i], filename.replace(".tsv", "")] += 1
+                        case "locus":
+                            value = i
+                            current_value = presence_absence_matrix.loc[clusters[i], filename.replace(".tsv", "")]
+                            if current_value == "":
+                                presence_absence_matrix.loc[clusters[i], filename.replace(".tsv", "")] = value
+                            else:
+                                presence_absence_matrix.loc[clusters[i], filename.replace(".tsv", "")] = current_value + ";" + value
 
     match mode:
         case "binary":
@@ -79,13 +79,11 @@ def create_presence_absence_matrix(directory, cluster_file, mode, output_directo
 
     if mode == "binary":
         presence_absence_matrix = presence_absence_matrix.reset_index(names='Locus Tag')
-        presence_absence_matrix.to_csv(os.path.join(output_directory, 'presence_absence_matrix_binary.tsv'), index=False, sep="\t")
-        return os.path.join(output_directory, 'presence_absence_matrix_binary.tsv')
+        presence_absence_matrix.to_csv(os.path.join(output_directory, fname + '_binary.tsv'), index=False, sep="\t")
 
     if mode == "numeric":
         presence_absence_matrix = presence_absence_matrix.reset_index(names='Locus Tag')
-        presence_absence_matrix.to_csv(os.path.join(output_directory, 'presence_absence_matrix_numeric.tsv'), index=False, sep="\t")
-        return os.path.join(output_directory, 'presence_absence_matrix_numeric.tsv')
+        presence_absence_matrix.to_csv(os.path.join(output_directory, fname + '_numeric.tsv'), index=False, sep="\t")
 
     if mode == "locus":
         presence_absence_matrix["Gene"] = ""
@@ -107,14 +105,15 @@ def create_presence_absence_matrix(directory, cluster_file, mode, output_directo
         new_order = cols_to_move + [c for c in presence_absence_matrix.columns if c not in cols_to_move]
         presence_absence_matrix = presence_absence_matrix[new_order]
 
-        presence_absence_matrix.to_csv(os.path.join(output_directory, 'presence_absence_matrix.tsv'), index=False, sep="\t")
-        return os.path.join(output_directory, 'presence_absence_matrix.tsv')    
+        presence_absence_matrix.to_csv(os.path.join(output_directory, fname + '.tsv'), index=False, sep="\t") 
 
     match mode:
         case "binary":
-            return os.path.join(output_directory, 'presence_absence_matrix_binary.tsv')
+            return os.path.join(output_directory, fname + '_binary.tsv')
+        case "numeric":
+            return os.path.join(output_directory, fname + '_numeric.tsv')
         case "locus":
-            return os.path.join(output_directory, 'presence_absence_matrix.tsv')  
+            return os.path.join(output_directory, fname + '.tsv')  
 
 
 def create_presence_absence_matrix_by_symbol(directory):
@@ -190,7 +189,7 @@ def pangenome_tsv(directory, cluster_file, matrix, output_directory, fname = 'pa
     return os.path.join(output_directory, fname)   
 
 
-def pangenome_fasta(directory, pangenome_table, output_directory, ftype: str, fname = "pangenome."):
+def pangenome_fasta(directory, pangenome_table, output_directory, ftype: str, fname = "pangenome"):
     if ftype not in "faa ffn".split():
         print(f"{ftype} not fasta.")
         return
@@ -210,7 +209,7 @@ def pangenome_fasta(directory, pangenome_table, output_directory, ftype: str, fn
 
     sorted_data = dict(sorted(out_rec.items(), key=lambda x: sorted_tags.index(x[0])))
 
-    with open(os.path.join(output_directory, fname + ftype), "w") as output_handle:
+    with open(os.path.join(output_directory, fname + "." + ftype), "w") as output_handle:
         SeqIO.write(list(sorted_data.values()), output_handle, "fasta")
 
 
@@ -277,6 +276,10 @@ def pangenome_curves(file_path):
     plt.ylabel('Core Genome Size')
     plt.title('Core Genome Size Distribution by Number of Samples')
     plt.grid(True)
+    plt.xticks(
+        ticks=range(set_size),
+        labels=range(1, set_size + 1)
+    )
     cor_image = os.path.join(directory, "cor.png")
     plt.savefig(cor_image)
 
@@ -291,6 +294,10 @@ def pangenome_curves(file_path):
     plt.ylabel('Pangenome Size')
     plt.title('Pangenome Size Distribution by Number of Samples')
     plt.grid(True)
+    plt.xticks(
+        ticks=range(set_size),
+        labels=range(1, set_size + 1)
+    )
     pan_image = os.path.join(directory, "pan.png")
     plt.savefig(pan_image)
 

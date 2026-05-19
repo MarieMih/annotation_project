@@ -44,12 +44,14 @@ def correct_tsv_file(tsv_path, pangenome_table, cluster_file):
 
     check_file_exists(tsv_path)
 
-    output_tsv = tsv_path.replace(".tsv", "_pangenome.tsv")
-    
-    names = "Sequence Id,Type,Start,Stop,Strand,Locus Tag,Gene,Product,DbXrefs".split(",")
+    if "_pangenome.tsv" not in tsv_path:
+        output_tsv = tsv_path.replace(".tsv", "_pangenome.tsv")
+    else:
+        output_tsv = tsv_path
 
-    origin = pd.read_csv(tsv_path, sep="\t", comment="#", names=names, header=0)
-    origin = origin.rename(columns={"Gene": "Uniq Gene", "Product": "Uniq Product", "DbXrefs": "Uniq DbXrefs"})
+    origin = pd.read_csv(tsv_path, sep="\t", comment="#", header=0)
+    if "Uniq Gene" not in origin.columns:
+        origin = origin.rename(columns={"Gene": "Uniq Gene", "Product": "Uniq Product", "DbXrefs": "Uniq DbXrefs"})
 
     pangenome_table_df = pd.read_csv(pangenome_table, sep="\t", index_col=None, header=0)
     # pangenome_table_df = pangenome_table_df.set_index('PID Locus Tag', drop=False)
@@ -57,19 +59,25 @@ def correct_tsv_file(tsv_path, pangenome_table, cluster_file):
     clusters  = pd.read_csv(cluster_file, sep='\t', header=None, names=["parent", "child"])
     clusters  = dict(zip(clusters["child"], clusters["parent"]))
 
-    mask = origin["Type"].isin("cds sorf".split())
     origin["Parent LT"] = ""
-    origin.loc[mask, "Parent LT"] = (
-        origin.loc[mask, "Locus Tag"]
-        .map(lambda x: clusters[x])
-    )
+    origin["Parent LT"] = origin["Locus Tag"].map(clusters).fillna(origin["Parent LT"])
 
     pangenome_table_df = pangenome_table_df.drop("Sequence Id,Type,Start,Stop,Strand".split(","), axis=1)
 
     pangenome_table_df["PID"] = pangenome_table_df["PID"].astype(str)
 
-    origin = pd.merge(origin, pangenome_table_df, left_on='Parent LT', right_on='PID Locus Tag', how='left')
-    origin = origin.drop(columns =["Parent LT"])
+    if "PID Locus Tag" not in origin.columns:
+        origin = pd.merge(origin, pangenome_table_df, left_on='Parent LT', right_on='PID Locus Tag', how='left')
+        origin = origin.drop(columns =["Parent LT"])
+    else:
+        tmp_df = pd.merge(origin, pangenome_table_df, left_on='Parent LT', right_on='PID Locus Tag', how='left', suffixes=["_old", ""])
+        tmp_df = tmp_df[tmp_df["PID Locus Tag"] != ""]
+        cols_to_update = [
+            col for col in pangenome_table_df.columns
+            if col not in ["PID Locus Tag", "PID"]
+        ]
+        origin.update(tmp_df[cols_to_update])
+
 
     cols_to_move = ['DbXrefs', "Uniq DbXrefs", "PID Locus Tag", "PID", "Genome"]
     new_order = [c for c in origin.columns if c not in cols_to_move] + cols_to_move

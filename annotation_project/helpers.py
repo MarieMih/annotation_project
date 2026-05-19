@@ -7,13 +7,13 @@ import telegram_send
 
 def check_file_exists(file):
     if os.path.exists(file) and os.path.isfile(file):
-        print(f'The file {file} exists.')
+        # print(f'The file {file} exists.')
         return 0
     if os.path.isfile(file):
-        print(f'The file {file} does not exist.')
+        # print(f'The file {file} does not exist.')
         return 1
     else:
-        print(f'The file {file} is not regular file.')
+        # print(f'The file {file} is not regular file.')
         return 2
 
 def check_dir_exists(directory):

@@ -62,10 +62,11 @@ def cohort_annotation(directory, data_line):
     create_directory_with_soft_links(faa, path_for_faa)
     create_directory_with_soft_links(ffn, path_for_ffn)
 
-    cluster_file = make_common_protein_fasta(common_variables.TOOL, [tsvtmp.replace(".tsv", ".faa") for tsvtmp in tsvs], common_pangenome_path)
-    rna_file     = make_common_rna_fasta(tsvs, common_pangenome_path)
-    shutil.copy(cluster_file, os.path.join(common_pangenome_path, "clusters.tsv"))
-
+    """
+    Part for CDS and sORF.
+    """
+    cluster_file = make_common_protein_fasta(common_variables.TOOL, [tsvtmp.replace(".tsv", ".faa") for tsvtmp in tsvs], common_pangenome_path, common_pangenome_path)
+    
     matrix_binary  = create_presence_absence_matrix(path_for_tsvs, cluster_file, "binary", common_pangenome_path)
     matrix_numeric = create_presence_absence_matrix(path_for_tsvs, cluster_file, "numeric", common_pangenome_path)
     matrix         = create_presence_absence_matrix(path_for_tsvs, cluster_file, "locus", common_pangenome_path)
@@ -85,6 +86,24 @@ def cohort_annotation(directory, data_line):
     print("Start pangenome")
     coresize, pansize = pangenome_curves(matrix_binary)
     print(f"Core: {coresize}, pan: {pansize}")
+
+
+
+    """
+    Part for ncRNA.
+    """
+
+    rna_file     = make_common_rna_fasta(tsvs, common_pangenome_path)
+
+    matrix_binary_rna  = create_presence_absence_matrix(path_for_tsvs, rna_file, "binary", common_pangenome_path, "presence_absence_matrix_rna")
+    matrix_numeric_rna = create_presence_absence_matrix(path_for_tsvs, rna_file, "numeric", common_pangenome_path, "presence_absence_matrix_rna")
+    matrix_rna         = create_presence_absence_matrix(path_for_tsvs, rna_file, "locus", common_pangenome_path, "presence_absence_matrix_rna")
+
+    pangenome_rna = pangenome_tsv(path_for_tsvs, rna_file, matrix_rna, common_pangenome_path, "pangenome_table_rna.tsv")
+    pangenome_fasta(path_for_ffn, pangenome_rna, common_pangenome_path, "ffn", "pangenome_rna")
+
+    for i in tsvs:
+        correct_tsv_file(str(Path(i).resolve()).replace(".tsv", "_pangenome.tsv"), pangenome_rna, rna_file)
 
     # print("Start stat creation")
     # make_stat_file(common_pangenome_path)
