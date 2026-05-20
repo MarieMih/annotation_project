@@ -15,7 +15,7 @@ from Bio import SeqIO
 
 def create_presence_absence_matrix(directory, cluster_file, mode, output_directory, fname = 'presence_absence_matrix'):
 
-    names = "Sequence Id,Type,Start,Stop,Strand,Locus Tag,Gene,Product,DbXrefs".split(",")
+    names = common_variables.BAKTA_TSV_HEADER.split(",")
 
     files = []
     for filename in os.listdir(directory):
@@ -116,35 +116,10 @@ def create_presence_absence_matrix(directory, cluster_file, mode, output_directo
             return os.path.join(output_directory, fname + '.tsv')  
 
 
-def create_presence_absence_matrix_by_symbol(directory):
-    gene_dict = {}
-
-    for filename in os.listdir(directory):
-        if filename.endswith('extended.tsv'):
-            file_path = os.path.join(directory, filename)
-            df = pd.read_csv(file_path, sep='\t', header=None)
-            gene_ids = df["Gene"].unique()  # Gene symbol
-            gene_dict[filename] = set(gene_ids)
-
-    parent_locus = list(set.union(*gene_dict.values()))
-    presence_absence_matrix = pd.DataFrame(0, index=parent_locus, columns=gene_dict.keys())
-
-    for filename, genes in gene_dict.items():
-        for i in genes:
-            presence_absence_matrix.loc[i, filename] = 1
-
-    presence_absence_matrix['count'] = presence_absence_matrix.sum(axis=1)
-    presence_absence_matrix = presence_absence_matrix.sort_values(by='count', ascending=False)
-    presence_absence_matrix = presence_absence_matrix.drop(columns=['count'])
-    presence_absence_matrix.to_csv(directory + "/" + 'presence_absence_matrix.csv')
-
-    return directory + "/" + 'presence_absence_matrix.csv'
-
-
-def pangenome_tsv(directory, cluster_file, matrix, output_directory, fname = 'pangenome_table.tsv'):
-    names      = "Sequence Id,Type,Start,Stop,Strand,Locus Tag,Gene,Product,DbXrefs".split(",")
-    infr_names = "Sequence Id,Type,Start,Stop,Strand,Locus Tag,Score,Evalue,Query Cov,Subject Cov,Id,Accession".split(",")
-    pannames   = "Sequence Id,Type,Start,Stop,Strand,Gene,Gene Name,Gene synonymes,Product,DbXrefs,Organism,Inference,KEGG,GO,gene_id,transcript_id".split(",")
+def pangenome_tsv(directory, cluster_file, matrix, output_directory, fname = 'pangenome_table'):
+    names      = common_variables.BAKTA_TSV_HEADER.split(",")
+    infr_names = common_variables.BAKTA_INFERENCE_TSV_HEADER.split(",")
+    pannames   = common_variables.PANGENOME_TSV_HEADER.split(",")
 
     clusters = pd.read_csv(cluster_file, sep='\t', header=None, names=["parent", "child"])
     clusters = dict(zip(clusters["child"], clusters["parent"]))
@@ -154,6 +129,7 @@ def pangenome_tsv(directory, cluster_file, matrix, output_directory, fname = 'pa
     pangenome_table[pannames] = ""
     pangenome_table[["Start", "Stop"]] = -1
     pangenome_table = pangenome_table.astype({"Start": int, "Stop": int})
+
     parent_fasta = pangenome_table.groupby('Genome').apply(lambda x: set(x.index)).to_dict()
     
     for i in parent_fasta.keys():
@@ -185,8 +161,8 @@ def pangenome_tsv(directory, cluster_file, matrix, output_directory, fname = 'pa
 
     pangenome_table = pangenome_table.reset_index(names='PID Locus Tag')
 
-    pangenome_table.to_csv(os.path.join(output_directory, fname), index=False, sep="\t")
-    return os.path.join(output_directory, fname)   
+    pangenome_table.to_csv(os.path.join(output_directory, fname + '.tsv'), index=False, sep="\t")
+    return os.path.join(output_directory, fname + '.tsv')   
 
 
 def pangenome_fasta(directory, pangenome_table, output_directory, ftype: str, fname = "pangenome"):
@@ -260,7 +236,7 @@ def calculate_pangenome_combinations(df):
 
 
 
-def pangenome_curves(file_path):
+def pangenome_curves(file_path, corefname="core_genome_size_distribution", panfname="pangenome_size_distribution"):
     directory = os.path.dirname(file_path)
     data = pd.read_csv(file_path, sep='\t', index_col=0, header=0)
     set_size = len(data.columns)
@@ -280,7 +256,7 @@ def pangenome_curves(file_path):
         ticks=range(set_size),
         labels=range(1, set_size + 1)
     )
-    cor_image = os.path.join(directory, "cor.png")
+    cor_image = os.path.join(directory, corefname + '.png')
     plt.savefig(cor_image)
 
     pangenome_sizes = calculate_pangenome_combinations(data)
@@ -298,7 +274,7 @@ def pangenome_curves(file_path):
         ticks=range(set_size),
         labels=range(1, set_size + 1)
     )
-    pan_image = os.path.join(directory, "pan.png")
+    pan_image = os.path.join(directory, panfname + '.png')
     plt.savefig(pan_image)
 
     if common_variables.SEND_NOTIFICATION:

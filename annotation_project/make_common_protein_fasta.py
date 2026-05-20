@@ -4,14 +4,14 @@ import shutil
 from helpers import union_files
 
 
-def make_common_protein_fasta(tool, faa, dir, outdir):
+def make_cds_clusters(tool, faa, dir, outdir, fname="clusters"):
     match tool:
         case "MMSEQS2":
             cluster_file = make_with_MMSEQS2(faa, dir)
         case _:
             print(f"{tool} is not correct value and not supported now.")
             return None
-    final_cluster_file = os.path.join(outdir, "clusters.tsv")
+    final_cluster_file = os.path.join(outdir, f"{fname}.tsv")
     shutil.copy(cluster_file, final_cluster_file)
     return final_cluster_file
 

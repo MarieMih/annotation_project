@@ -169,7 +169,7 @@ def assembly_unicycler_pe(fastq_1, fastq_2):
         print(e, "\n", "Error with unicycler.")
         sys.exit()
 
-    return os.path.join(pth, "assembly.fasta")
+    return os.path.abspath(os.path.join(pth, "assembly.fasta"))
 
 
 def bakta_annotation(fasta, locus_tag):
