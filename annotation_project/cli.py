@@ -11,6 +11,7 @@ from main import pipeline_assembly_file
 from main import pipeline_stat_all_tsv_in_dir
 from main import pipeline_assembly_bakta_only
 from main import pipeline_setting
+from resource_monitor import ResourceMonitor
 
 
 def launch_pipeline_assembly(args):
@@ -22,7 +23,9 @@ def launch_pipeline_fastq(args):
 
 
 def launch_annotation_polishing(args):
-    polishing_annotation(args.directory)
+    report_path = os.path.join(args.directory, "monitor_report.txt")
+    with ResourceMonitor(interval=1.0, report_path=report_path, label="polishing_annotation") as monitor:
+        polishing_annotation(args.directory)
 
 
 def launch_pipeline_assembly_file(args):
