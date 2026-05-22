@@ -12,20 +12,38 @@ from make_common_feature_fasta import make_feature_clusters
 from metrics.stat import make_stat_file
 from helpers import create_directory, create_directory_with_soft_links, check_file_exists
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
-def annotate_fasta_in_dir(directory):
+def _annotate_single_fasta(fasta_path):
+    name = os.path.split(fasta_path)[1].partition('.')[0]
+    print(fasta_path, name)
+    print("Bakta prefix: 24 symbols max. Taken latest 20 sym.")
+    bakta_annotation(fasta_path, name[-24:])
+
+
+def annotate_fasta_in_dir(directory, jobs=1):
     files = []
     for filename in os.listdir(directory):
         if filename.endswith('.fasta') or filename.endswith('.fa') or filename.endswith('.fna'):
-            file_path = os.path.join(directory, filename)
-            files.append(file_path)
+            files.append(os.path.join(directory, filename))
 
-    for i in files:
-        name = os.path.split(i)[1].partition('.')[0]
-        print(i, name)
-        print("Bakta prefix: 24 symbols max. Taken latest 20 sym.")
-        bakta_annotation(i, name[-24:])
+    if jobs is None or jobs < 1:
+        jobs = 1
+
+    if jobs == 1:
+        for fasta in files:
+            _annotate_single_fasta(fasta)
+        return
+
+    with ThreadPoolExecutor(max_workers=jobs) as executor:
+        future_to_fasta = {executor.submit(_annotate_single_fasta, fasta): fasta for fasta in files}
+        for future in as_completed(future_to_fasta):
+            fasta = future_to_fasta[future]
+            try:
+                future.result()
+            except Exception as exc:
+                print(f"Error annotating {fasta}: {exc}")
 
 
 def cohort_annotation(directory, data_line):

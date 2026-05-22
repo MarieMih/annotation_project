@@ -16,11 +16,11 @@ from helpers import return_str_with_date_and_time
 
 
 def launch_pipeline_assembly(args):
-    pipeline_assembly(args.directory)
+    pipeline_assembly(args.directory, args.jobs)
 
 
 def launch_pipeline_fastq(args):
-    pipeline_since_fastq(args.directory)
+    pipeline_since_fastq(args.directory, args.jobs)
 
 
 def launch_annotation_polishing(args):
@@ -42,7 +42,7 @@ def launch_pipeline_assembly_bakta_only(args):
     data_line = return_str_with_date_and_time()
     report_path = os.path.join(args.directory, "monitor_report_" + data_line + ".txt")
     with ResourceMonitor(interval=3600.0, report_path=report_path, label="assembly_bakta_only") as monitor:
-        pipeline_assembly_bakta_only(args.directory)
+        pipeline_assembly_bakta_only(args.directory, args.jobs)
 
 
 def launch_pipeline_setting(args):
@@ -66,12 +66,14 @@ def create_parser():
     parser_assembly.add_argument("--tool", metavar="CLUSTER_TOOL")
     parser_assembly.add_argument("--send-tg", help="telegram messages", action="store_true")
     parser_assembly.add_argument("-t", "--threads", metavar="THREADS")
+    parser_assembly.add_argument("--jobs", type=int, metavar="JOBS", default=1, help="Number of sample-level annotation jobs to run in parallel")
     parser_assembly.set_defaults(func=launch_pipeline_assembly)
 
     parser_assembly_file = subparsers.add_parser("assembly_file", help="annotate all assembly.fasta written in .txt")
     parser_assembly_file.add_argument("-f", "--file", metavar="TXT_FILE")
     parser_assembly_file.add_argument("--bakta-db", metavar="BAKTA_DB")
     parser_assembly_file.add_argument("--user-db", metavar="USER_DB")
+    parser_assembly_file.add_argument("--jobs", type=int, metavar="JOBS", default=1, help="Number of sample-level annotation jobs to run in parallel")
     parser_assembly_file.add_argument("--send-tg", help="telegram messages", action="store_true")
     parser_assembly_file.add_argument("-t", "--threads", metavar="THREADS")
     parser_assembly_file.set_defaults(func=launch_pipeline_assembly_file)
@@ -82,6 +84,7 @@ def create_parser():
     parser_fastq.add_argument("--user-db", metavar="USER_DB")
     parser_fastq.add_argument("--send-tg", help="telegram messages", action="store_true")
     parser_fastq.add_argument("-t", "--threads", metavar="THREADS")
+    parser_fastq.add_argument("--jobs", type=int, metavar="JOBS", default=1, help="Number of sample-level annotation jobs to run in parallel")
     parser_fastq.set_defaults(func=launch_pipeline_fastq)
 
     parser_polish = subparsers.add_parser("polish", help="polish bakta annotation in directory")
@@ -99,6 +102,7 @@ def create_parser():
     parser_stat_bakta.add_argument("--bakta-db", metavar="BAKTA_DB")
     parser_stat_bakta.add_argument("--user-db", metavar="USER_DB")
     parser_stat_bakta.add_argument("-t", "--threads", metavar="THREADS")
+    parser_stat_bakta.add_argument("--jobs", type=int, metavar="JOBS", default=1, help="Number of sample-level annotation jobs to run in parallel")
     parser_stat_bakta.set_defaults(func=launch_pipeline_assembly_bakta_only)
 
     parser_stat = subparsers.add_parser("setting", help="help to set up all databases")

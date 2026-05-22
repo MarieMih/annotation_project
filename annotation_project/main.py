@@ -24,14 +24,14 @@ def polishing_annotation(directory):
         asyncio.run(send_smth(text=["Ends annotation"]))
 
 
-def pipeline_assembly(directory):
+def pipeline_assembly(directory, jobs=1):
     """
     Annotate all .fasta, .fa, .fna assemblies in input directory.
     """
 
     data_line = return_str_with_date_and_time()
 
-    annotate_fasta_in_dir(directory)
+    annotate_fasta_in_dir(directory, jobs=jobs)
 
     cohort_annotation(directory, data_line)
 
@@ -41,15 +41,15 @@ def pipeline_assembly(directory):
 def pipeline_assembly_file(file):
     pass
 
-def pipeline_assembly_bakta_only(directory):
+def pipeline_assembly_bakta_only(directory, jobs=1):
     """
     Annotate all .fasta in directory by bakta with custom db.
     """
-    annotate_fasta_in_dir(directory)
+    annotate_fasta_in_dir(directory, jobs=jobs)
 
 
-def pipeline_since_fastq(directory):
-    """"
+def pipeline_since_fastq(directory, jobs=1):
+    """
     Full pipeline with filteration, assembling, annotation
     and pangenome analysis.
     """
@@ -69,7 +69,7 @@ def pipeline_since_fastq(directory):
         assembly = assembly_unicycler_pe(read_1, read_2)
         shutil.copy(assembly, os.path.join(directory, name + ".fasta"))
 
-    annotate_fasta_in_dir(directory)
+    annotate_fasta_in_dir(directory, jobs=jobs)
     cohort_annotation(directory, data_line)
 
     if common_variables.SEND_NOTIFICATION:
