@@ -12,6 +12,7 @@ from main import pipeline_stat_all_tsv_in_dir
 from main import pipeline_assembly_bakta_only
 from main import pipeline_setting
 from resource_monitor import ResourceMonitor
+from helpers import return_str_with_date_and_time
 
 
 def launch_pipeline_assembly(args):
@@ -23,8 +24,9 @@ def launch_pipeline_fastq(args):
 
 
 def launch_annotation_polishing(args):
-    report_path = os.path.join(args.directory, "monitor_report.txt")
-    with ResourceMonitor(interval=1.0, report_path=report_path, label="polishing_annotation") as monitor:
+    data_line = return_str_with_date_and_time()
+    report_path = os.path.join(args.directory, "monitor_report_" + data_line + ".txt")
+    with ResourceMonitor(interval=3600.0, report_path=report_path, label="polishing_annotation") as monitor:
         polishing_annotation(args.directory)
 
 
@@ -37,7 +39,10 @@ def launch_pipeline_stat_all_tsv_in_dir(args):
 
 
 def launch_pipeline_assembly_bakta_only(args):
-    pipeline_assembly_bakta_only(args.directory)
+    data_line = return_str_with_date_and_time()
+    report_path = os.path.join(args.directory, "monitor_report_" + data_line + ".txt")
+    with ResourceMonitor(interval=3600.0, report_path=report_path, label="assembly_bakta_only") as monitor:
+        pipeline_assembly_bakta_only(args.directory)
 
 
 def launch_pipeline_setting(args):

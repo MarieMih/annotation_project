@@ -158,7 +158,7 @@ def pangenome_tsv(directory, cluster_file, matrix, output_directory, fname = 'pa
 
     pangenome_table["gene_id"]       = pangenome_table["Type"] + "|" + pangenome_table["Gene Name"] + "|" + pangenome_table["Inference"].astype("str")
     pangenome_table["transcript_id"] = pangenome_table["gene_id"]
-
+    
     pangenome_table = pangenome_table.reset_index(names='PID Locus Tag')
 
     pangenome_table.to_csv(os.path.join(output_directory, fname + '.tsv'), index=False, sep="\t")

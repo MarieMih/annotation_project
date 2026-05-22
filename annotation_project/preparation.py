@@ -180,18 +180,20 @@ def bakta_annotation(fasta, locus_tag):
     parts = os.path.split(fasta)
     pth   = os.path.join(parts[0], "bakta_annotation_" + locus_tag)
     f = open(os.path.join(parts[0], "bakta_annotation_" + locus_tag + ".log"), "w", encoding="utf-8")
+    command = [ 'bakta',
+                '--db', common_variables.BAKTA_DB,
+                '--force',
+                '--skip-plot',
+                '--locus-tag', locus_tag,
+                '--prefix', locus_tag,
+                '--threads', common_variables.N_THREADS,
+                '--output', pth
+                ]
+    if common_variables.PROTEINS is not None:
+        command.extend(['--proteins', common_variables.PROTEINS])
+    command.extend([fasta])
     try:
-        subprocess.run(['bakta',
-                        '--db', common_variables.BAKTA_DB,
-                        '--proteins', common_variables.PROTEINS,
-                        '--force',
-                        '--skip-plot',
-                        '--locus-tag', locus_tag,
-                        '--prefix', locus_tag,
-                        '--threads', common_variables.N_THREADS,
-                        '--output', pth,
-                        fasta
-                        ], check=True, stdout=f)
+        subprocess.run(command, check=True, stdout=f)
     except Exception as e:
         print(e, "\n", "Error with bakta.")
         f.close()
