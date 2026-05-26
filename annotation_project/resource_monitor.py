@@ -42,6 +42,8 @@ class ResourceMonitor:
         self._started = False
         self._start_time: Optional[float] = None
         self._end_time: Optional[float] = None
+        self._last_cpu_times: Dict[int, float] = {}
+        self._last_sample_time: Optional[float] = None
 
     def _sample(self) -> None:
         timestamp = datetime.datetime.now().isoformat()
@@ -51,12 +53,15 @@ class ResourceMonitor:
         memory_percent = None
 
         if psutil is not None:
-            proc = psutil.Process(os.getpid())
-            cpu_percent = proc.cpu_percent(interval=None)
-            mem_info = proc.memory_info()
-            memory_rss = mem_info.rss
-            memory_vms = mem_info.vms
-            memory_percent = proc.memory_percent()
+            try:
+                processes = self._all_processes()
+                cpu_percent = self._compute_cpu_percent(processes)
+                memory_rss = sum(p.memory_info().rss for p in processes)
+                memory_vms = sum(p.memory_info().vms for p in processes)
+                memory_percent = sum(p.memory_percent() for p in processes)
+            except Exception:
+                cpu_percent = self._sample_cpu_fallback()
+                memory_rss, memory_vms, memory_percent = self._sample_memory_fallback()
         else:
             cpu_percent = self._sample_cpu_fallback()
             memory_rss, memory_vms, memory_percent = self._sample_memory_fallback()
@@ -71,9 +76,45 @@ class ResourceMonitor:
             }
         )
 
+    def _all_processes(self):
+        root = psutil.Process(os.getpid())
+        return [root] + root.children(recursive=True)
+
     def _sample_cpu_fallback(self) -> float:
         # Fallback: return 0.0 if we cannot sample reliably
         return 0.0
+
+    def _process_cpu_time(self, proc: Any) -> float:
+        try:
+            times = proc.cpu_times()
+            return float(times.user + times.system)
+        except Exception:
+            return 0.0
+
+    def _compute_cpu_percent(self, processes: List[Any]) -> float:
+        now = time.time()
+        total_cpu_time = 0.0
+        for proc in processes:
+            if not proc.is_running():
+                continue
+            total_cpu_time += self._process_cpu_time(proc)
+        interval = 0.0
+        if self._last_sample_time is not None:
+            interval = now - self._last_sample_time
+        previous_total = 0.0
+        for proc in processes:
+            previous_total += self._last_cpu_times.get(proc.pid, 0.0)
+        if interval <= 0.0:
+            cpu_percent = 0.0
+        else:
+            cpu_percent = max(0.0, (total_cpu_time - previous_total) / interval * 100.0)
+        self._last_sample_time = now
+        self._last_cpu_times = {
+            proc.pid: self._process_cpu_time(proc)
+            for proc in processes
+            if proc.is_running()
+        }
+        return cpu_percent
 
     def _sample_memory_fallback(self) -> tuple[Optional[float], Optional[float], Optional[float]]:
         rss = None
@@ -96,7 +137,12 @@ class ResourceMonitor:
         self._started = True
         self._start_time = time.time()
         if psutil is not None:
-            psutil.Process(os.getpid()).cpu_percent(interval=None)
+            self._last_sample_time = time.time()
+            self._last_cpu_times = {
+                proc.pid: self._process_cpu_time(proc)
+                for proc in self._all_processes()
+                if proc.is_running()
+            }
         while not self._stop_event.wait(self.interval):
             self._sample()
         self._sample()
