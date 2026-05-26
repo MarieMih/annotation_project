@@ -12,7 +12,7 @@ from make_common_feature_fasta import make_feature_clusters
 from metrics.stat import make_stat_file
 from helpers import create_directory, create_directory_with_soft_links, check_file_exists
 from pathlib import Path
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 
 def _annotate_single_fasta(fasta_path):
@@ -36,7 +36,7 @@ def annotate_fasta_in_dir(directory, jobs=1):
             _annotate_single_fasta(fasta)
         return
 
-    with ThreadPoolExecutor(max_workers=jobs) as executor:
+    with ProcessPoolExecutor(max_workers=jobs) as executor:
         future_to_fasta = {executor.submit(_annotate_single_fasta, fasta): fasta for fasta in files}
         for future in as_completed(future_to_fasta):
             fasta = future_to_fasta[future]
