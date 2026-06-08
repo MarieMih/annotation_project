@@ -57,4 +57,7 @@ python cli.py setting когда спросит про user-proteins, указа
 
 # Всякое
 Есть тулы для переноса аннотации между геномами  
-https://github.com/oschwengers/bakta/issues/247
+https://github.com/oschwengers/bakta/issues/247  
+
+Еще тулы для аннотации плазмид
+https://github.com/oschwengers/bakta/issues/31
