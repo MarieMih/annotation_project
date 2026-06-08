@@ -60,4 +60,5 @@ python cli.py setting когда спросит про user-proteins, указа
 https://github.com/oschwengers/bakta/issues/247  
 
 Еще тулы для аннотации плазмид
-https://github.com/oschwengers/bakta/issues/31
+https://github.com/oschwengers/bakta/issues/31  
+https://github.com/oschwengers/bakta/issues/427
