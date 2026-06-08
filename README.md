@@ -1,6 +1,8 @@
 ![Colinca](https://github.com/MarieMih/annotation_project/blob/rebase/other/colinca.png)
 
+# DEV-BRANCH
 
+Всякие нюансы строения проекта будут в отдельном файле DEVELOP.md
 
 # Colinca
 
