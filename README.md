@@ -103,8 +103,6 @@ Common parameter that switch on telegram messages.
 Parameter that set path to protein-trusted list file.
 #### The --bakta-db parameter [string]
 Parameter that set path to bakta database folder.
-#### The --upimapi-db parameter [string]
-Parameter that set path to UPIMAPI database.
 
 
 ## Output
