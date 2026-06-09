@@ -158,7 +158,7 @@ Particularly, this is most suitable if you want to compare a lot of similar samp
 
 - **Why Colinca?**
 
-Colinca is an anagram of "Colling" and "annotation". It's also famous dance and tree.
+Colinca is an anagram of "Calling", "Coli" and "annotation". It's also famous dance and tree.
 
 ## Acknowledgements
 - Work is done as a magister diplome in MIPT.
