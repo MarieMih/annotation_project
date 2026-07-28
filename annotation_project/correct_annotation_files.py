@@ -49,12 +49,11 @@ def correct_tsv_file(tsv_path, pangenome_table, cluster_file):
     else:
         output_tsv = tsv_path
 
-    origin = pd.read_csv(tsv_path, sep="\t", comment="#", header=0)
+    origin = pd.read_csv(tsv_path, sep="\t", comment="#", header=0, dtype={"PID": str})
     if "Uniq Gene" not in origin.columns:
         origin = origin.rename(columns={"Gene": "Uniq Gene", "Product": "Uniq Product", "DbXrefs": "Uniq DbXrefs"})
 
-    pangenome_table_df = pd.read_csv(pangenome_table, sep="\t", index_col=None, header=0)
-    # pangenome_table_df = pangenome_table_df.set_index('PID Locus Tag', drop=False)
+    pangenome_table_df = pd.read_csv(pangenome_table, sep="\t", index_col=None, header=0, dtype={"PID": str})
 
     clusters  = pd.read_csv(cluster_file, sep='\t', header=None, names=["parent", "child"])
     clusters  = dict(zip(clusters["child"], clusters["parent"]))
@@ -64,19 +63,19 @@ def correct_tsv_file(tsv_path, pangenome_table, cluster_file):
 
     pangenome_table_df = pangenome_table_df.drop("Sequence Id,Type,Start,Stop,Strand".split(","), axis=1)
 
-    pangenome_table_df["PID"] = pangenome_table_df["PID"].astype(str)
-
     if "PID Locus Tag" not in origin.columns:
         origin = pd.merge(origin, pangenome_table_df, left_on='Parent LT', right_on='PID Locus Tag', how='left')
         origin = origin.drop(columns =["Parent LT"])
     else:
-        tmp_df = pd.merge(origin, pangenome_table_df, left_on='Parent LT', right_on='PID Locus Tag', how='left', suffixes=["_old", ""])
+        tmp_df = pd.merge(origin, pangenome_table_df, left_on='Parent LT', right_on='PID Locus Tag', how='left', suffixes=["_old", ""], sort=False)
+        tmp_df.index = origin.index
         tmp_df = tmp_df[tmp_df["PID Locus Tag"] != ""]
         cols_to_update = [
             col for col in pangenome_table_df.columns
-            if col not in ["PID Locus Tag", "PID"]
+            if col not in ["PID Locus Tag", "PID"] ########################## when PID of different features will be unique, "PID" could be erased
         ]
         origin.update(tmp_df[cols_to_update])
+        origin = origin.drop(columns =["Parent LT"])
 
 
     cols_to_move = ['DbXrefs', "Uniq DbXrefs", "PID Locus Tag", "PID", "Genome"]

@@ -97,11 +97,11 @@ def cohort_annotation(directory, data_line):
     """
 
     rna_file = make_feature_clusters(common_variables.TOOL_FOR_RNA, tsvs, common_pangenome_path, common_pangenome_path)
-    pangenome_existing_feature(path_for_tsvs, common_pangenome_path, tsvs, rna_file, feature="rna", type="nc", path_for_ffn=path_for_ffn, path_for_faa=path_for_faa)
+    pangenome_existing_feature(path_for_tsvs, common_pangenome_path, tsvs, rna_file, feature="rna", type="nc", path_for_ffn=path_for_ffn, path_for_faa=path_for_faa, add_to_existing=True)
 
 
 
-def pangenome_existing_feature(path_for_tsvs, common_pangenome_path, tsvs, cluster_file, feature="rna", type="aa", path_for_ffn=None, path_for_faa=None):
+def pangenome_existing_feature(path_for_tsvs, common_pangenome_path, tsvs, cluster_file, feature="rna", type="aa", path_for_ffn=None, path_for_faa=None, add_to_existing=False):
     matrix_binary  = create_presence_absence_matrix(path_for_tsvs, cluster_file, "binary", common_pangenome_path, f"presence_absence_matrix_{feature}")
     matrix_numeric = create_presence_absence_matrix(path_for_tsvs, cluster_file, "numeric", common_pangenome_path, f"presence_absence_matrix_{feature}")
     matrix         = create_presence_absence_matrix(path_for_tsvs, cluster_file, "locus", common_pangenome_path, f"presence_absence_matrix_{feature}")
@@ -118,6 +118,9 @@ def pangenome_existing_feature(path_for_tsvs, common_pangenome_path, tsvs, clust
             pass
 
     for i in tsvs:
-        correct_tsv_file(str(Path(i).resolve()).replace(".tsv", "_pangenome.tsv"), pangenome, cluster_file)
+        if add_to_existing:
+            correct_tsv_file(str(Path(i).resolve()).replace(".tsv", "_pangenome.tsv"), pangenome, cluster_file)
+        else:
+            correct_tsv_file(str(Path(i).resolve()), pangenome, cluster_file)
 
     return [matrix_binary, matrix_numeric, matrix, pangenome]
