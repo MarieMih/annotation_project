@@ -89,7 +89,7 @@ def correct_short_headers_for_bakta(input_file, output_file, long_format = False
                 else:
                     w.write(line_file)
 
-def create_trembl_db(PROTEIN_DB_FOLDER_USER = "/storage/data1/marmi/annotation_project/protein_db", tax = ['562']):
+def create_trembl_db(PROTEIN_DB_FOLDER_USER = None, tax = ['562']):
 
     PROTEIN_DB_FOLDER = os.path.join(PROTEIN_DB_FOLDER_USER, "upimapi_trembl_taxid")
     url = generate_url_trembl(tax)
@@ -117,7 +117,7 @@ def create_trembl_db(PROTEIN_DB_FOLDER_USER = "/storage/data1/marmi/annotation_p
     if os.path.exists(DB_FILE):
         os.remove(DB_FILE)
 
-def create_protein_db(PROTEIN_DB_FOLDER_USER = "/storage/data1/marmi/annotation_project/protein_db", tax = ['562']):
+def create_protein_db(PROTEIN_DB_FOLDER_USER = None, tax = ['562']):
 
     PROTEIN_DB_FOLDER = os.path.join(PROTEIN_DB_FOLDER_USER, "usertaxids_colinca")
     url = generate_url(tax)
@@ -168,7 +168,7 @@ def create_protein_db(PROTEIN_DB_FOLDER_USER = "/storage/data1/marmi/annotation_
     correct_short_headers_for_bakta(os.path.join(PROTEIN_DB_FOLDER, 'uniprot_sequences_' + "_".join(tax) + "_rep_seq.fasta"), os.path.join(PROTEIN_DB_FOLDER, 'uniprot_sequences_' + "_".join(tax) + "_rep.fasta"))
     os.remove(os.path.join(PROTEIN_DB_FOLDER, 'uniprot_sequences_' + "_".join(tax) + "_rep_seq.fasta"))
 
-def create_upimapi_db(UPIMAPI_DB_FOLDER_USER = "/storage/data1/marmi/annotation_project/protein_db", tax = ['562']):
+def create_upimapi_db(UPIMAPI_DB_FOLDER_USER = None, tax = ['562']):
 
     UPIMAPI_DB_FOLDER = os.path.join(UPIMAPI_DB_FOLDER_USER, "upimapi_taxids_colinca")
     url = generate_url_trembl(tax)
@@ -217,3 +217,33 @@ def create_upimapi_db(UPIMAPI_DB_FOLDER_USER = "/storage/data1/marmi/annotation_
     os.remove(os.path.join(UPIMAPI_DB_FOLDER, 'upimapi_uniprot_trembl_' + "_".join(tax) + "_cluster.tsv"))
 
     return os.path.join(UPIMAPI_DB_FOLDER, 'upimapi_uniprot_trembl_' + "_".join(tax) + "_rep_seq.fasta")
+
+
+
+def modify_any_protein_file_header(input_file, output_file, long_format = False, min_identity = str(90), min_query_cov = str(80), min_subject_cov = str(80)):
+
+    DBNAME = "DB"
+    pattern_id = r'>(\S+)'
+    pattern_product = r'(?:tr|sp)\|\S+\|\S+\s+(.*?)(?=\s+\S+=|$)'
+    pattern_gene = r'GN=(.*?)\s'
+
+    with open (output_file, "w") as w:
+        with open (input_file, "r") as f:
+            for line_file in f:
+                match_id      = re.search(pattern_id, line_file)
+                match_product = re.search(pattern_product, line_file)
+                match_gene    = re.search(pattern_gene, line_file)
+
+                if match_id:
+                    substring_product = match_product.group(1) if match_product else "-"
+                    substring_gene    = match_gene.group(1)    if match_gene    else ""
+                    substring_id      = match_id.group(1) if match_id else f"{DBNAME}"
+
+                    if long_format:
+                        header_str = ">" + substring_id + " " + min_identity + "~~~" + min_query_cov + "~~~" + min_subject_cov + "~~~" + substring_gene + "~~~" + substring_product + "~~~" + "\n"
+                    else:
+                        header_str = ">" + substring_id + " " + substring_gene + "~~~" + substring_product + "~~~" + "\n"
+                    w.write(header_str)
+                else:
+                    w.write(line_file)
+

@@ -10,7 +10,7 @@ BAKTA_DB = None
 PROTEINS = None
 N_THREADS = str(int(os.cpu_count() * 0.75 if (os.cpu_count() is not None) else 1))
 
-TOOL = "MMSEQS2"
+TOOL = "PGAP2"
 
 TOOL_FOR_RNA = "None"
 

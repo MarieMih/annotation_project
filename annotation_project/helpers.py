@@ -68,3 +68,11 @@ async def send_smth(cor_image, pan_image):
         await telegram_send.send(images=[f])
     with open(pan_image, "rb") as f:
         await telegram_send.send(images=[f])
+    
+
+def replace_after_dot(text, replacement: str) -> str:
+    if '.' not in text:
+        return text
+
+    before_dot, _, _ = text.partition('.')
+    return before_dot + '.' + replacement

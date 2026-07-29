@@ -6,8 +6,8 @@ import subprocess
 sys.path.append(os.path.dirname(__file__))
 import common_variables
 from preparation import assembly_unicycler_pe, bakta_annotation, send_smth, filtering_fastq_pe
-from create_protein_trusted_list import create_protein_db, create_upimapi_db, check_taxids
-from helpers import return_str_with_date_and_time
+from create_protein_trusted_list import create_protein_db, create_upimapi_db, check_taxids, modify_any_protein_file_header
+from helpers import return_str_with_date_and_time, check_file_exists
 from cohort_annotation import cohort_annotation, annotate_fasta_in_dir
 
 
@@ -74,6 +74,16 @@ def pipeline_since_fastq(directory, jobs=1):
 
     if common_variables.SEND_NOTIFICATION:
         asyncio.run(send_smth(text=["Ends annotation"]))
+
+
+def pipeline_headers(input_file, output_file):
+    """
+    Take a faa and modify header for compatibility with bakta.
+    """
+    if (check_file_exists(input_file) == 0) and (check_file_exists(output_file) == 2):
+        modify_any_protein_file_header(input_file, output_file)
+    else:
+        print(f"There is a problem with {input_file} or {output_file}.")
 
 
 def pipeline_setting():

@@ -51,6 +51,7 @@ def cohort_annotation(directory, data_line):
     inference = []
     faa       = []
     ffn       = []
+    gff       = []
     files     = []
     for file_path in os.listdir(directory):
         if file_path.startswith('bakta_annotation') and not file_path.endswith('.log'):
@@ -66,9 +67,10 @@ def cohort_annotation(directory, data_line):
         precorrect_tsv_file(annotation_tsv)
 
         tsvs.append(annotation_tsv)
-        inference.append(annotation_tsv.replace(".tsv", ".inference.tsv"))
         faa.append(annotation_tsv.replace(".tsv", ".faa"))
         ffn.append(annotation_tsv.replace(".tsv", ".ffn"))
+        gff.append(annotation_tsv.replace(".tsv", ".gff3"))
+        inference.append(annotation_tsv.replace(".tsv", ".inference.tsv"))
         
 
     common_pangenome_path = os.path.join(directory, "pangenome_data_" + data_line)
@@ -76,16 +78,18 @@ def cohort_annotation(directory, data_line):
     path_for_infr         = os.path.join(common_pangenome_path, "inferences")
     path_for_faa          = os.path.join(common_pangenome_path, "faa")
     path_for_ffn          = os.path.join(common_pangenome_path, "ffn")
+    path_for_gff          = os.path.join(common_pangenome_path, "gff")
     create_directory(common_pangenome_path)
     create_directory_with_soft_links(tsvs, path_for_tsvs)
     create_directory_with_soft_links(inference, path_for_infr)
     create_directory_with_soft_links(faa, path_for_faa)
     create_directory_with_soft_links(ffn, path_for_ffn)
+    create_directory_with_soft_links(gff, path_for_gff)
 
     """
     Part for CDS and sORF.
     """
-    cluster_file = make_cds_clusters(common_variables.TOOL, [tsvtmp.replace(".tsv", ".faa") for tsvtmp in tsvs], common_pangenome_path, common_pangenome_path)
+    cluster_file = make_cds_clusters(common_variables.TOOL, [tsvtmp.replace(".tsv", ".faa") for tsvtmp in tsvs], common_pangenome_path, common_pangenome_path, path_to_gff=path_for_gff)
     data = pangenome_existing_feature(path_for_tsvs, common_pangenome_path, tsvs, cluster_file, feature="cds", type="aa", path_for_ffn=path_for_ffn, path_for_faa=path_for_faa)
 
     print("Start pangenome")
