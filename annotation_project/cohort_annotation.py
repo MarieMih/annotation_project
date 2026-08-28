@@ -64,7 +64,7 @@ def cohort_annotation(directory, data_line):
 
         if check_file_exists(annotation_tsv.replace(".tsv", ".bakta.tsv")) != 0:
             shutil.copy(annotation_tsv, annotation_tsv.replace(".tsv", ".bakta.tsv"))
-        precorrect_tsv_file(annotation_tsv)
+            precorrect_tsv_file(annotation_tsv)
 
         tsvs.append(annotation_tsv)
         faa.append(annotation_tsv.replace(".tsv", ".faa"))

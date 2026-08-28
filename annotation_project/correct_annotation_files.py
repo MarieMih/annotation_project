@@ -10,10 +10,32 @@ def precorrect_tsv_file(tsv_path):
 
     names = "Sequence Id,Type,Start,Stop,Strand,Locus Tag,Gene,Product,DbXrefs".split(",")
 
-    if check_file_exists(tsv_path.replace(".tsv", ".bakta.tsv")) != 0:
-        origin = pd.read_csv(tsv_path, sep="\t", comment="#", names=names, header=None)
+    # if check_file_exists(tsv_path.replace(".tsv", ".bakta.tsv")) != 0:
+    #     origin = pd.read_csv(tsv_path, sep="\t", comment="#", names=names, header=None)
+    #     print(f"{tsv_path} 1")
+    # else:
+    #     origin = pd.read_csv(tsv_path, sep="\t", comment="#", names=names, header=0)
+    #     print(f"{tsv_path} 2")
+
+    with open(tsv_path, "r") as f:
+        first_line = f.readline()
+
+    if first_line.startswith("#"):
+        origin = pd.read_csv(
+            tsv_path,
+            sep="\t",
+            comment="#",
+            names=names,
+            header=None
+        )
     else:
-        origin = pd.read_csv(tsv_path, sep="\t", comment="#", names=names, header=0)
+        origin = pd.read_csv(
+            tsv_path,
+            sep="\t",
+            comment="#",
+            names=names,
+            header=0
+        )
 
     def count_calls(func):
         def wrapper(*args, **kwargs):
